@@ -91,6 +91,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                     <SelectItem value="finance">金融办管理端</SelectItem>
                     <SelectItem value="hr">人资管理端</SelectItem>
                     <SelectItem value="commerce">商务委管理端</SelectItem>
+                    <SelectItem value="employment">就业局</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.role && <p className="text-red-500 text-sm">{errors.role}</p>}

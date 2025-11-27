@@ -13,11 +13,11 @@ interface LogisticsDemandProps {
 export default function LogisticsDemand({ onNavigate }: LogisticsDemandProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const demands = [
+  const [demands, setDemands] = useState([
     { id: '1', company: '制造公司A', cargo: '钢材', weight: '50吨', route: '奉节→重庆', status: '待对接', publishTime: '2024-10-16' },
     { id: '2', company: '贸易公司B', cargo: '农产品', weight: '30吨', route: '奉节→成都', status: '已对接', publishTime: '2024-10-15' },
     { id: '3', company: '电商企业C', cargo: '电子产品', weight: '10吨', route: '奉节→武汉', status: '运输中', publishTime: '2024-10-14' },
-  ];
+  ]);
 
   const filtered = demands.filter(d => 
     d.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -26,6 +26,44 @@ export default function LogisticsDemand({ onNavigate }: LogisticsDemandProps) {
 
   const handleViewDetails = (id: string) => {
     onNavigate(`logistics-demand-detail-${id}`);
+  };
+
+  const approveDemand = (id: string) => {
+    const target = demands.find(d => d.id === id);
+    setDemands(demands.map(d => d.id === id ? { ...d, status: '已对接' } : d));
+    const record = {
+      id: `${Date.now()}-${id}`,
+      type: '物流需求',
+      action: '同意',
+      target: target ? `${target.company} - ${target.cargo}` : id,
+      operator: '商务委管理员',
+      timestamp: new Date().toLocaleString(),
+    };
+    try {
+      const key = 'commerceHistory';
+      const existing = localStorage.getItem(key);
+      const list = existing ? JSON.parse(existing) : [];
+      localStorage.setItem(key, JSON.stringify([record, ...list]));
+    } catch {}
+  };
+
+  const rejectDemand = (id: string) => {
+    const target = demands.find(d => d.id === id);
+    setDemands(demands.map(d => d.id === id ? { ...d, status: '已拒绝' } : d));
+    const record = {
+      id: `${Date.now()}-${id}`,
+      type: '物流需求',
+      action: '拒绝',
+      target: target ? `${target.company} - ${target.cargo}` : id,
+      operator: '商务委管理员',
+      timestamp: new Date().toLocaleString(),
+    };
+    try {
+      const key = 'commerceHistory';
+      const existing = localStorage.getItem(key);
+      const list = existing ? JSON.parse(existing) : [];
+      localStorage.setItem(key, JSON.stringify([record, ...list]));
+    } catch {}
   };
 
   return (
@@ -72,6 +110,7 @@ export default function LogisticsDemand({ onNavigate }: LogisticsDemandProps) {
                       <Badge className={
                         demand.status === '运输中' ? 'bg-blue-100 text-blue-700' :
                         demand.status === '已对接' ? 'bg-green-100 text-green-700' :
+                        demand.status === '已拒绝' ? 'bg-red-100 text-red-700' :
                         'bg-orange-100 text-orange-700'
                       }>
                         {demand.status}
@@ -79,9 +118,13 @@ export default function LogisticsDemand({ onNavigate }: LogisticsDemandProps) {
                     </TableCell>
                     <TableCell>{demand.publishTime}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleViewDetails(demand.id)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleViewDetails(demand.id)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => approveDemand(demand.id)}>同意</Button>
+                        <Button variant="ghost" size="sm" onClick={() => rejectDemand(demand.id)}>拒绝</Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

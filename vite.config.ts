@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 import vitePluginForArco from '@arco-plugins/vite-react';
 
@@ -10,6 +10,9 @@ export default defineConfig({
       style: 'css',
     }),
   ],
+  esbuild: {
+    target: 'es2020',
+  },
   css: {
     preprocessorOptions: {
       less: {
@@ -19,6 +22,7 @@ export default defineConfig({
   },
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+    preserveSymlinks: true,
     alias: {
       'vaul@1.1.2': 'vaul',
       'sonner@2.0.3': 'sonner',
@@ -62,11 +66,20 @@ export default defineConfig({
     },
   },
   build: {
-    target: 'esnext',
-    outDir: 'build',
+    target: 'es2020',
+    outDir: 'dist',
   },
   server: {
     port: 3000,
+    strictPort: true,
     open: true,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+    },
+    watch: {
+      usePolling: true,
+      interval: 100,
+    },
   },
 });

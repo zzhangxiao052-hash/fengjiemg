@@ -13,10 +13,13 @@ import AdManagement from './park/AdManagement';
 // import RoleManagement from './park/RoleManagement';
 import StatisticsPage from './park/StatisticsPage';
 import SystemSettings from './park/SystemSettings';
-import { LayoutDashboard, Settings, FileText, Building, Megaphone, BookOpen, Bell, Users, BarChart3, History } from 'lucide-react';
+import { LayoutDashboard, Settings, FileText, Building, Megaphone, BookOpen, Bell, Users, BarChart3, History, Presentation } from 'lucide-react';
 import AnnouncementManagement from './park/AnnouncementManagement';
 import ParkDataCollectionManagement from './park/ParkDataCollectionManagement';
-import ParkHistory from './park/ParkHistory'; // Import ParkHistory component
+import ParkHistory from './park/ParkHistory';
+import VisualizationManagement from './park/VisualizationManagement';
+import DynamicManagement from './park/DynamicManagement';
+import ContentSettings from './park/ContentSettings';
 
 
 interface ParkDashboardProps {
@@ -33,7 +36,16 @@ export default function ParkDashboard({ username, onLogout }: ParkDashboardProps
     { id: 'dashboard', label: '仪表盘', icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: 'content', label: '网站内容管理', icon: <FileText className="h-5 w-5" /> },
     { id: 'verification', label: '企业认证', icon: <Building className="h-5 w-5" /> },
-    { id: 'enterprise-management', label: '企业管理', icon: <Building className="h-5 w-5" /> },
+    {
+      id: 'enterprise-management-group',
+      label: '企业管理',
+      icon: <Building className="h-5 w-5" />,
+      children: [
+        { id: 'enterprise-management', label: '企业管理' },
+        { id: 'dynamic-management', label: '动态管理' },
+        { id: 'content-settings', label: '内容设置' },
+      ],
+    },
     { id: 'statistics', label: '数据统计', icon: <BarChart3 className="h-5 w-5" /> },
     {
       id: 'settings',
@@ -50,6 +62,11 @@ export default function ParkDashboard({ username, onLogout }: ParkDashboardProps
       label: "园区数据采集管理端",
       icon: <BarChart3 className="h-5 w-5" />,
       id: "park-data-collection-management",
+    },
+    {
+      id: 'visualization-management',
+      label: '可视化页面管理',
+      icon: <Presentation className="h-5 w-5" />,
     },
     {
       id: 'history',
@@ -85,11 +102,15 @@ export default function ParkDashboard({ username, onLogout }: ParkDashboardProps
         }} />;
       case 'enterprise-management':
         return <EnterpriseManagement />;
+      case 'dynamic-management':
+        return <DynamicManagement />;
+      case 'content-settings':
+        return <ContentSettings />;
       case 'policy':
         return <PolicyManagement />;
       case 'content':
         return <ContentManagement />;
-      case 'ads':
+      case 'ad-management': // Changed from 'ads' to 'ad-management' to match sub-item ID
         return <AdManagement />;
       // case 'role-management':
       //   return <RoleManagement />;
@@ -101,8 +122,10 @@ export default function ParkDashboard({ username, onLogout }: ParkDashboardProps
         return <StatisticsPage />;
       case "settings":
         return <SystemSettings />;
+      case 'visualization-management':
+        return <VisualizationManagement />;
       case "history":
-        return <ParkHistory />; // Render ParkHistory component
+        return <ParkHistory />;
       default:
         return <ParkHome onNavigate={setCurrentPage} />;
     }

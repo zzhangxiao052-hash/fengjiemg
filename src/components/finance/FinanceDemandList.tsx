@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { Button } from '../ui/button';
@@ -21,6 +22,7 @@ interface Demand {
   submitTime: string;
   description: string;
   notes?: string; // Add notes field for processing
+  source: string; // New field for data source
 }
 
 export default function FinanceDemandList() {
@@ -39,11 +41,53 @@ export default function FinanceDemandList() {
   const [demandToDeleteId, setDemandToDeleteId] = useState<string | null>(null);
 
   const [demands, setDemands] = useState<Demand[]>([
-    { id: '1', company: '重庆科技有限公司', type: '流动资金贷款', amount: '500万', contact: '张经理', status: 'pending', submitTime: '2024-10-16', description: '企业急需流动资金周转' },
-    { id: '2', company: '奉节农业发展公司', type: '项目贷款', amount: '1000万', contact: '李总', status: 'processing', submitTime: '2024-10-15', description: '农业项目扩大再生产，需要资金支持' },
-    { id: '3', company: '长江物流集团', type: '供应链融资', amount: '800万', contact: '王主管', status: 'completed', submitTime: '2024-10-14', description: '优化供应链，提高资金周转效率' },
-    { id: '4', company: '三峡旅游开发', type: '旅游专项贷', amount: '1200万', contact: '赵经理', status: 'pending', submitTime: '2024-10-13', description: '开发新的旅游项目，需要大额资金投入' },
+    { id: '1', company: '重庆科技有限公司', type: '流动资金贷款', amount: '500万', contact: '张经理', status: 'pending', submitTime: '2024-10-16', description: '企业急需流动资金周转', source: '企业申请' },
+    { id: '2', company: '奉节农业发展公司', type: '项目贷款', amount: '1000万', contact: '李总', status: 'processing', submitTime: '2024-10-15', description: '农业项目扩大再生产，需要资金支持', source: '企业申请' },
+    { id: '3', company: '长江物流集团', type: '供应链融资', amount: '800万', contact: '王主管', status: 'completed', submitTime: '2024-10-14', description: '优化供应链，提高资金周转效率', source: '企业申请' },
+    { id: '4', company: '三峡旅游开发', type: '旅游专项贷', amount: '1200万', contact: '赵经理', status: 'pending', submitTime: '2024-10-13', description: '开发新的旅游项目，需要大额资金投入', source: '企业申请' },
+    { id: '5', company: '未来智能制造', type: '设备购置贷', amount: '2000万', contact: '刘总', status: 'pending', submitTime: '2024-10-17', description: '采购新一代智能生产线', source: '企业需求' },
+    { id: '6', company: '绿色能源科技', type: '绿色信贷', amount: '1500万', contact: '陈经理', status: 'processing', submitTime: '2024-10-18', description: '光伏发电项目建设', source: '企业需求' },
   ]);
+
+  const approveDemand = (id: string) => {
+    const target = demands.find(d => d.id === id);
+    setDemands(demands.map(d => d.id === id ? { ...d, status: 'approved' } : d));
+    const record = {
+      id: `${Date.now()}-${id}`,
+      type: '金融需求',
+      action: '同意',
+      target: target ? `${target.company} - ${target.type}` : id,
+      operator: '金融办管理员',
+      timestamp: new Date().toLocaleString(),
+    };
+    try {
+      const key = 'financeHistory';
+      const existing = localStorage.getItem(key);
+      const list = existing ? JSON.parse(existing) : [];
+      localStorage.setItem(key, JSON.stringify([record, ...list]));
+    } catch {}
+    toast.success('已同意该金融需求');
+  };
+
+  const rejectDemand = (id: string) => {
+    const target = demands.find(d => d.id === id);
+    setDemands(demands.map(d => d.id === id ? { ...d, status: 'rejected' } : d));
+    const record = {
+      id: `${Date.now()}-${id}`,
+      type: '金融需求',
+      action: '拒绝',
+      target: target ? `${target.company} - ${target.type}` : id,
+      operator: '金融办管理员',
+      timestamp: new Date().toLocaleString(),
+    };
+    try {
+      const key = 'financeHistory';
+      const existing = localStorage.getItem(key);
+      const list = existing ? JSON.parse(existing) : [];
+      localStorage.setItem(key, JSON.stringify([record, ...list]));
+    } catch {}
+    toast.success('已拒绝该金融需求');
+  };
 
   const handleViewDemand = (demand: Demand) => {
     setSelectedDemand(demand);
@@ -102,6 +146,10 @@ export default function FinanceDemandList() {
         return <Badge className="bg-blue-100 text-blue-700">处理中</Badge>;
       case 'completed':
         return <Badge className="bg-green-100 text-green-700">已完成</Badge>;
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-700">已同意</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-700">已拒绝</Badge>;
       default:
         return <Badge variant="secondary">未知</Badge>;
     }
@@ -145,8 +193,9 @@ export default function FinanceDemandList() {
               <TableHeader>
                 <TableRow>
                   <TableHead>企业名称</TableHead>
+                  <TableHead>来源</TableHead>
                   <TableHead>需求类型</TableHead>
-                  <TableHead>融资金额</TableHead>
+                  <TableHead>需求金额</TableHead>
                   <TableHead>联系人</TableHead>
                   <TableHead>状态</TableHead>
                   <TableHead>提交时间</TableHead>
@@ -157,6 +206,11 @@ export default function FinanceDemandList() {
                 {filteredDemands.map((demand) => (
                   <TableRow key={demand.id} className="hover:bg-slate-50">
                     <TableCell>{demand.company}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={demand.source === '企业需求' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-slate-50 text-slate-700 border-slate-200'}>
+                        {demand.source}
+                      </Badge>
+                    </TableCell>
                     <TableCell>{demand.type}</TableCell>
                     <TableCell>{demand.amount}</TableCell>
                     <TableCell>{demand.contact}</TableCell>
@@ -166,6 +220,12 @@ export default function FinanceDemandList() {
                       <div className="flex justify-end gap-2">
                         <Button variant="ghost" size="icon" onClick={() => handleViewDemand(demand)}>
                           <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => approveDemand(demand.id)}>
+                          同意
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => rejectDemand(demand.id)}>
+                          拒绝
                         </Button>
                       </div>
                     </TableCell>
@@ -189,11 +249,19 @@ export default function FinanceDemandList() {
               <p className="mt-1 text-slate-700">{selectedDemand?.company}</p>
             </div>
             <div>
+              <Label>来源</Label>
+              <div className="mt-1">
+                <Badge variant="outline" className={selectedDemand?.source === '企业需求' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-slate-50 text-slate-700 border-slate-200'}>
+                  {selectedDemand?.source}
+                </Badge>
+              </div>
+            </div>
+            <div>
               <Label>需求类型</Label>
               <p className="mt-1 text-slate-700">{selectedDemand?.type}</p>
             </div>
             <div>
-              <Label>融资金额</Label>
+              <Label>需求金额</Label>
               <p className="mt-1 text-slate-700">{selectedDemand?.amount}</p>
             </div>
             <div>

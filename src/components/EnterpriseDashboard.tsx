@@ -4,12 +4,11 @@ import EnterpriseHome from './enterprise/EnterpriseHome';
 import { ServicePublish } from './enterprise/ServicePublish';
 import EnterpriseCollaboration from './enterprise/EnterpriseCollaboration';
 import DataCollection from './enterprise/DataCollection';
-import OperationsManagement from './enterprise/OperationsManagement';
 import UserCenter from './enterprise/UserCenter';
-import EnterpriseDetail from './enterprise/EnterpriseDetail'; // Import EnterpriseDetail
-import ServiceReview from './enterprise/ServiceReview'; // Import ServiceReview
-import ServiceReviewHistory from './enterprise/ServiceReviewHistory'; // Import ServiceReviewHistory
-import ShopEdit from './enterprise/ShopEdit'; // Import ShopEdit
+import EnterpriseDetail from './enterprise/EnterpriseDetail';
+import ServiceReview from './enterprise/ServiceReview';
+import ServiceReviewHistory from './enterprise/ServiceReviewHistory';
+import ShopEdit from './enterprise/ShopEdit';
 import { LayoutDashboard, Building, Briefcase, GitPullRequest, Users, Shield, UserCheck, ClipboardCheck, FileText, Settings, Store, Send, Database, User, History } from 'lucide-react';
 
 interface EnterpriseDashboardProps {
@@ -22,9 +21,8 @@ export default function EnterpriseDashboard({ username, onLogout }: EnterpriseDa
 
   const menuItems = [
     { id: 'dashboard', label: '服务展示', icon: <Store className="h-5 w-5" /> },
-    { id: 'publish', label: '服务发布', icon: <Send className="h-5 w-5" /> },
-    { id: 'operations', label: '运营管理', icon: <LayoutDashboard className="h-5 w-5" /> },
-    { id: 'service-review', label: '服务审核', icon: <LayoutDashboard className="h-5 w-5" /> },
+    { id: 'publish', label: '需求发布', icon: <Send className="h-5 w-5" /> },
+    { id: 'service-review', label: '简历审核', icon: <LayoutDashboard className="h-5 w-5" /> },
     {
       id: 'collaboration',
       label: '企业协同',
@@ -56,8 +54,6 @@ export default function EnterpriseDashboard({ username, onLogout }: EnterpriseDa
         return <EnterpriseHome onNavigate={setCurrentPage} />;
       case 'publish':
         return <ServicePublish />;
-      case 'operations':
-        return <OperationsManagement onNavigate={setCurrentPage} />;
       case 'service-review':
         return <ServiceReview onNavigate={setCurrentPage} />;
       case 'procurement':
@@ -72,8 +68,6 @@ export default function EnterpriseDashboard({ username, onLogout }: EnterpriseDa
         return <UserCenter />;
       case 'history':
         return <ServiceReviewHistory />;
-      case 'enterprise-management':
-        return <EnterpriseManagement onNavigate={setCurrentPage} />;
       default:
         return <EnterpriseHome onNavigate={setCurrentPage} />;
     }

@@ -6,8 +6,6 @@ import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Search, Edit, Trash, Eye } from 'lucide-react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import DynamicManagement from './DynamicManagement';
 
 interface Enterprise {
   id: string;
@@ -167,7 +165,6 @@ const EnterpriseManagement: React.FC = () => {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [currentEnterprise, setCurrentEnterprise] = useState<Enterprise | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeManagementType, setActiveManagementType] = useState('enterprise-management');
 
   const handleAddEdit = (enterprise?: Enterprise) => {
     setCurrentEnterprise(enterprise || {
@@ -224,77 +221,57 @@ const EnterpriseManagement: React.FC = () => {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <Select onValueChange={setActiveManagementType} defaultValue={activeManagementType}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="选择管理模块" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="enterprise-management">企业管理</SelectItem>
-            <SelectItem value="dynamic-management">动态管理</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-2">
+          <Input
+            placeholder="搜索企业..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-80"
+          />
+          <Button><Search className="h-4 w-4 mr-2" />搜索</Button>
+        </div>
+        <Button onClick={() => handleAddEdit()}>新增企业</Button>
       </div>
 
-      {activeManagementType === 'enterprise-management' && (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center space-x-2">
-              <Input
-                placeholder="搜索企业..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-80"
-              />
-              <Button><Search className="h-4 w-4 mr-2" />搜索</Button>
-            </div>
-            <Button onClick={() => handleAddEdit()}>新增企业</Button>
-          </div>
-
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>企业名称</TableHead>
-                  <TableHead>用户名</TableHead>
-                  <TableHead>联系人姓名</TableHead>
-                  <TableHead>联系人电话</TableHead>
-                  <TableHead>是否认证</TableHead>
-                  <TableHead>地区</TableHead>
-                  <TableHead>操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEnterprises.map(enterprise => (
-                  <TableRow key={enterprise.id}>
-                    <TableCell>{enterprise.enterpriseName}</TableCell>
-                    <TableCell>{enterprise.username}</TableCell>
-                    <TableCell>{enterprise.contactPersonName}</TableCell>
-                    <TableCell>{enterprise.contactPersonPhone}</TableCell>
-                    <TableCell>{enterprise.isVerified ? '是' : '否'}</TableCell>
-                    <TableCell>{enterprise.region}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" onClick={() => handleView(enterprise)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleAddEdit(enterprise)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(enterprise.id)}>
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </>
-      )}
-
-      {activeManagementType === 'dynamic-management' && (
-        <DynamicManagement />
-      )}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>企业名称</TableHead>
+              <TableHead>用户名</TableHead>
+              <TableHead>联系人姓名</TableHead>
+              <TableHead>联系人电话</TableHead>
+              <TableHead>是否认证</TableHead>
+              <TableHead>地区</TableHead>
+              <TableHead>操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredEnterprises.map(enterprise => (
+              <TableRow key={enterprise.id}>
+                <TableCell>{enterprise.enterpriseName}</TableCell>
+                <TableCell>{enterprise.username}</TableCell>
+                <TableCell>{enterprise.contactPersonName}</TableCell>
+                <TableCell>{enterprise.contactPersonPhone}</TableCell>
+                <TableCell>{enterprise.isVerified ? '是' : '否'}</TableCell>
+                <TableCell>{enterprise.region}</TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="icon" onClick={() => handleView(enterprise)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleAddEdit(enterprise)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(enterprise.id)}>
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       <Dialog open={showAddEditDialog} onOpenChange={setShowAddEditDialog}>
         <DialogContent className="max-w-[800px] max-h-[75vh] overflow-y-auto">

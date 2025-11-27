@@ -7,12 +7,15 @@ import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Label } from '../ui/label';
-import { Search, Eye, Download, Star } from 'lucide-react';
+import { Search, Eye, Download, Star, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 
 interface Resume {
   id: string;
   name: string;
   position: string;
+  jobType: string;
   education: string;
   experience: string;
   phone: string;
@@ -21,19 +24,23 @@ interface Resume {
 
 export default function ResumeManagement() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterJobType, setFilterJobType] = useState('all');
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [toDeleteResume, setToDeleteResume] = useState<Resume | null>(null);
   const [selectedResume, setSelectedResume] = useState<Resume | null>(null);
 
-  const resumes: Resume[] = [
-    { id: '1', name: '张三', position: '软件工程师', education: '本科', experience: '3年', phone: '138****1234', submitTime: '2024-10-16' },
-    { id: '2', name: '李四', position: '机械工程师', education: '硕士', experience: '5年', phone: '139****5678', submitTime: '2024-10-15' },
-    { id: '3', name: '王五', position: '市场经理', education: '本科', experience: '4年', phone: '137****9012', submitTime: '2024-10-14' },
-  ];
+  const [resumes, setResumes] = useState<Resume[]>([
+    { id: '1', name: '张三', position: '软件工程师', jobType: '前端开发', education: '本科', experience: '3年', phone: '138****1234', submitTime: '2024-10-16' },
+    { id: '2', name: '李四', position: '机械工程师', jobType: '机械工程', education: '硕士', experience: '5年', phone: '139****5678', submitTime: '2024-10-15' },
+    { id: '3', name: '王五', position: '市场经理', jobType: '市场运营', education: '本科', experience: '4年', phone: '137****9012', submitTime: '2024-10-14' },
+  ]);
 
-  const filtered = resumes.filter(r => 
-    r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.position.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = resumes.filter(r => {
+    const matchesSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase()) || r.position.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesJob = filterJobType === 'all' || r.jobType === filterJobType;
+    return matchesSearch && matchesJob;
+  });
 
   const viewDetail = (resume: Resume) => {
     setSelectedResume(resume);
@@ -49,7 +56,7 @@ export default function ResumeManagement() {
 
       <Card>
         <CardHeader>
-          <div className="relative">
+          <div className="relative flex flex-col md:flex-row gap-4">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="搜索姓名或职位..."
@@ -57,6 +64,17 @@ export default function ResumeManagement() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
+            <Select value={filterJobType} onValueChange={setFilterJobType}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="工种筛选" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部工种</SelectItem>
+                <SelectItem value="前端开发">前端开发</SelectItem>
+                <SelectItem value="机械工程">机械工程</SelectItem>
+                <SelectItem value="市场运营">市场运营</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
@@ -66,6 +84,7 @@ export default function ResumeManagement() {
                 <TableRow>
                   <TableHead>姓名</TableHead>
                   <TableHead>期望职位</TableHead>
+                  <TableHead>工种</TableHead>
                   <TableHead>学历</TableHead>
                   <TableHead>工作经验</TableHead>
                   <TableHead>联系电话</TableHead>
@@ -78,6 +97,7 @@ export default function ResumeManagement() {
                   <TableRow key={resume.id} className="hover:bg-slate-50">
                     <TableCell>{resume.name}</TableCell>
                     <TableCell>{resume.position}</TableCell>
+                    <TableCell>{resume.jobType}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{resume.education}</Badge>
                     </TableCell>
@@ -96,6 +116,9 @@ export default function ResumeManagement() {
                         <Button variant="ghost" size="icon">
                           <Star className="h-4 w-4" />
                         </Button>
+                        <Button variant="ghost" size="icon" onClick={() => { setToDeleteResume(resume); setShowDeleteDialog(true); }}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -106,7 +129,6 @@ export default function ResumeManagement() {
         </CardContent>
       </Card>
 
-      {/* Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
@@ -130,6 +152,10 @@ export default function ResumeManagement() {
                   <div>
                     <Label>期望职位</Label>
                     <p className="mt-1 text-slate-700">{selectedResume.position}</p>
+                  </div>
+                  <div>
+                    <Label>工种</Label>
+                    <p className="mt-1 text-slate-700">{selectedResume.jobType}</p>
                   </div>
                   <div>
                     <Label>学历</Label>
@@ -197,6 +223,40 @@ export default function ResumeManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除简历</AlertDialogTitle>
+            <AlertDialogDescription>
+              是否删除 {toDeleteResume?.name}（ID: {toDeleteResume?.id}）的简历？该操作将记录到历史记录。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (!toDeleteResume) return;
+              setResumes(prev => prev.filter(r => r.id !== toDeleteResume.id));
+              const key = 'hrHistory';
+              const existing = localStorage.getItem(key);
+              const list = existing ? JSON.parse(existing) : [];
+              const record = {
+                id: `${Date.now()}`,
+                type: '简历',
+                action: '删除',
+                target: `${toDeleteResume.name}(${toDeleteResume.id})`,
+                operator: '人资管理员',
+                timestamp: new Date().toLocaleString(),
+                before: toDeleteResume,
+                after: null,
+              };
+              localStorage.setItem(key, JSON.stringify([record, ...list]));
+              setShowDeleteDialog(false);
+              setToDeleteResume(null);
+            }}>确认删除</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -90,6 +90,10 @@ export default function EnterpriseCollaboration({ type, onNavigate }: Enterprise
     unit: '',
     description: '',
     contact: '',
+    factoryImage: '',
+    industrialType: '',
+    factoryProfile: '',
+    factoryServices: '',
     manufacturerName: '', // New field for capacity
     address: '', // New field for capacity
     numberOfEmployees: '', // New field for capacity
@@ -229,8 +233,8 @@ export default function EnterpriseCollaboration({ type, onNavigate }: Enterprise
         contactPhone: '',
       });
     } else if (type === 'procurement') {
-      if (!formData.materialName || !formData.publishingCompany || !formData.deliveryLocation || !formData.procurementTitle || !formData.procurementQuantity || !formData.unit) {
-        toast.error('请填写所有必填信息');
+      if (!formData.materialName || !formData.publishingCompany || !formData.procurementCategory || !formData.procurementQuantity || !formData.budgetRange || !formData.deliveryLocation || !formData.inquiryTime || !formData.deadline || !formData.invoiceType || !formData.brand || !formData.specification || !formData.unit || !formData.contact) {
+        toast.error('请填写采购寻源的所有字段');
         return;
       }
       toast.success('采购寻源发布成功');
@@ -251,6 +255,96 @@ export default function EnterpriseCollaboration({ type, onNavigate }: Enterprise
         unit: '',
         description: '',
         contact: '',
+        factoryImage: '',
+        manufacturerName: '',
+        address: '',
+        numberOfEmployees: '',
+        area: '',
+        monthlyCapacity: '',
+        factoryCapacityTags: '',
+        projectName: '',
+        companyName: '',
+        minOrderQuantity: '',
+        priceRange: '',
+        contactPerson: '',
+        contactPhone: '',
+      });
+    } else if (type === 'capacity') {
+      if (!formData.manufacturerName || !formData.address || !formData.numberOfEmployees || !formData.area || !formData.monthlyCapacity) {
+        toast.error('请完善工厂名称、地址、人数、面积、月产能');
+        return;
+      }
+      toast.success('产能共享提交成功');
+      setShowAddDialog(false);
+      setFormData({
+        materialName: '',
+        publishingCompany: '',
+        procurementCategory: '',
+        procurementQuantity: '',
+        budgetRange: '',
+        deliveryLocation: '',
+        procurementTitle: '',
+        inquiryTime: '',
+        deadline: '',
+        invoiceType: '',
+        brand: '',
+        specification: '',
+        unit: '',
+        description: '',
+        contact: '',
+        factoryImage: '',
+        manufacturerName: '',
+        address: '',
+        numberOfEmployees: '',
+        area: '',
+        monthlyCapacity: '',
+        factoryCapacityTags: '',
+        projectName: '',
+        companyName: '',
+        minOrderQuantity: '',
+        priceRange: '',
+        contactPerson: '',
+        contactPhone: '',
+      });
+    } else if (type === 'supply') {
+      if (!formData.industrialType || !formData.manufacturerName || !formData.priceRange || !formData.minOrderQuantity || !formData.contactPerson || !formData.contactPhone) {
+        toast.error('请完善产业类型、工厂名称、价格区间、起订量、联系人、联系电话');
+        return;
+      }
+      toast.success('产品供应发布成功');
+      setShowAddDialog(false);
+      setFormData({
+        materialName: '',
+        publishingCompany: '',
+        procurementCategory: '',
+        procurementQuantity: '',
+        budgetRange: '',
+        deliveryLocation: '',
+        procurementTitle: '',
+        inquiryTime: '',
+        deadline: '',
+        invoiceType: '',
+        brand: '',
+        specification: '',
+        unit: '',
+        description: '',
+        contact: '',
+        factoryImage: '',
+        industrialType: '',
+        factoryProfile: '',
+        factoryServices: '',
+        manufacturerName: '',
+        address: '',
+        numberOfEmployees: '',
+        area: '',
+        monthlyCapacity: '',
+        factoryCapacityTags: '',
+        projectName: '',
+        companyName: '',
+        minOrderQuantity: '',
+        priceRange: '',
+        contactPerson: '',
+        contactPhone: '',
       });
     } else {
       if (!formData.title) {
@@ -357,10 +451,9 @@ export default function EnterpriseCollaboration({ type, onNavigate }: Enterprise
         return [
           <TableCell key="materialName">{item.materialName}</TableCell>,
           <TableCell key="industrialType">{item.industrialType}</TableCell>,
-          <TableCell key="demandQuantity">{item.demandQuantity}</TableCell>,
-          <TableCell key="budget">{item.budget}</TableCell>,
+          <TableCell key="quantity">{item.quantity}</TableCell>,
           <TableCell key="contactPerson">{item.contactPerson}</TableCell>,
-          <TableCell key="contactNumber">{item.contactNumber}</TableCell>,
+          <TableCell key="contactPhone">{item.contactPhone}</TableCell>,
           <TableCell key="actions" className="text-right">
             <TooltipProvider>
               <Tooltip>
@@ -660,7 +753,6 @@ export default function EnterpriseCollaboration({ type, onNavigate }: Enterprise
                       <TableHead>材料名称</TableHead>
                       <TableHead>工业类型</TableHead>
                       <TableHead>需求数量</TableHead>
-                      <TableHead>报价预算</TableHead>
                       <TableHead>联系人</TableHead>
                       <TableHead>联系电话</TableHead>
                       <TableHead className="text-center">操作</TableHead>
@@ -861,89 +953,168 @@ export default function EnterpriseCollaboration({ type, onNavigate }: Enterprise
                     />
                   </div>
                 </>
+              ) : type === 'procurement' ? (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="materialName">材料名称 *</Label>
+                    <Input id="materialName" value={formData.materialName} onChange={(e) => setFormData({ ...formData, materialName: e.target.value })} placeholder="如：钢材/电子元件" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="publishingCompany">发布公司 *</Label>
+                    <Input id="publishingCompany" value={formData.publishingCompany} onChange={(e) => setFormData({ ...formData, publishingCompany: e.target.value })} placeholder="请输入公司名称" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="procurementCategory">采购类别 *</Label>
+                      <Input id="procurementCategory" value={formData.procurementCategory} onChange={(e) => setFormData({ ...formData, procurementCategory: e.target.value })} placeholder="如：建筑材料/电子产品" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="procurementQuantity">采购数量 *</Label>
+                      <Input id="procurementQuantity" value={formData.procurementQuantity} onChange={(e) => setFormData({ ...formData, procurementQuantity: e.target.value })} placeholder="请输入数量" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="budgetRange">预算范围 *</Label>
+                      <Input id="budgetRange" value={formData.budgetRange} onChange={(e) => setFormData({ ...formData, budgetRange: e.target.value })} placeholder="如：50万-80万" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="deliveryLocation">交货地点 *</Label>
+                      <Input id="deliveryLocation" value={formData.deliveryLocation} onChange={(e) => setFormData({ ...formData, deliveryLocation: e.target.value })} placeholder="请输入交货地点" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="inquiryTime">询价时间 *</Label>
+                      <Input id="inquiryTime" type="datetime-local" value={formData.inquiryTime} onChange={(e) => setFormData({ ...formData, inquiryTime: e.target.value })} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="deadline">截止时间 *</Label>
+                      <Input id="deadline" type="datetime-local" value={formData.deadline} onChange={(e) => setFormData({ ...formData, deadline: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="invoiceType">发票类型 *</Label>
+                      <Input id="invoiceType" value={formData.invoiceType} onChange={(e) => setFormData({ ...formData, invoiceType: e.target.value })} placeholder="如：专用/普通" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="brand">品牌 *</Label>
+                      <Input id="brand" value={formData.brand} onChange={(e) => setFormData({ ...formData, brand: e.target.value })} placeholder="请输入品牌" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="specification">规格 *</Label>
+                      <Input id="specification" value={formData.specification} onChange={(e) => setFormData({ ...formData, specification: e.target.value })} placeholder="如：HRB400/10kΩ" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="unit">单位 *</Label>
+                      <Input id="unit" value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} placeholder="如：吨/个" />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="contact">联系方式 *</Label>
+                    <Input id="contact" value={formData.contact} onChange={(e) => setFormData({ ...formData, contact: e.target.value })} placeholder="如：张三 13800138000" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">需求描述</Label>
+                    <Textarea id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="请输入详细描述" rows={4} />
+                  </div>
+                </>
+              ) : type === 'capacity' ? (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="factoryImage">工厂图片</Label>
+                    <Input id="factoryImage" type="file" accept="image/*" onChange={(e: any) => setFormData({ ...formData, factoryImage: e.target.files?.[0]?.name || '' })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="manufacturerName">工厂名称 *</Label>
+                    <Input id="manufacturerName" value={formData.manufacturerName} onChange={(e) => setFormData({ ...formData, manufacturerName: e.target.value })} placeholder="请输入工厂名称" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="address">工厂地址 *</Label>
+                    <Input id="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} placeholder="请输入地址" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="numberOfEmployees">工厂人数 *</Label>
+                      <Input id="numberOfEmployees" value={formData.numberOfEmployees} onChange={(e) => setFormData({ ...formData, numberOfEmployees: e.target.value })} placeholder="如：120人" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="area">工厂面积 *</Label>
+                      <Input id="area" value={formData.area} onChange={(e) => setFormData({ ...formData, area: e.target.value })} placeholder="如：5000㎡" />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="monthlyCapacity">月产能 *</Label>
+                    <Input id="monthlyCapacity" value={formData.monthlyCapacity} onChange={(e) => setFormData({ ...formData, monthlyCapacity: e.target.value })} placeholder="如：1000件/月" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="factoryCapacityTags">加工服务</Label>
+                    <Input id="factoryCapacityTags" value={formData.factoryCapacityTags} onChange={(e) => setFormData({ ...formData, factoryCapacityTags: e.target.value })} placeholder="如：CNC、注塑、喷涂" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">其它描述</Label>
+                    <Textarea id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="补充说明" rows={4} />
+                  </div>
+                </>
+              ) : type === 'supply' ? (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="factoryImage">工厂图片</Label>
+                    <Input id="factoryImage" type="file" accept="image/*" onChange={(e: any) => setFormData({ ...formData, factoryImage: e.target.files?.[0]?.name || '' })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="industrialType">产业类型 *</Label>
+                    <Input id="industrialType" value={formData.industrialType} onChange={(e) => setFormData({ ...formData, industrialType: e.target.value })} placeholder="例如：金属加工/塑料制品/电子制造" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="manufacturerName">工厂名称 *</Label>
+                    <Input id="manufacturerName" value={formData.manufacturerName} onChange={(e) => setFormData({ ...formData, manufacturerName: e.target.value })} placeholder="请输入工厂名称" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="factoryProfile">工厂简介</Label>
+                    <Textarea id="factoryProfile" value={formData.factoryProfile} onChange={(e) => setFormData({ ...formData, factoryProfile: e.target.value })} placeholder="请输入工厂简介" rows={3} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="factoryServices">工厂服务</Label>
+                    <Input id="factoryServices" value={formData.factoryServices} onChange={(e) => setFormData({ ...formData, factoryServices: e.target.value })} placeholder="如：CNC、注塑、喷涂" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="priceRange">价格区间 *</Label>
+                      <Input id="priceRange" value={formData.priceRange} onChange={(e) => setFormData({ ...formData, priceRange: e.target.value })} placeholder="如：¥10-¥50/件" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="minOrderQuantity">起订量 *</Label>
+                      <Input id="minOrderQuantity" value={formData.minOrderQuantity} onChange={(e) => setFormData({ ...formData, minOrderQuantity: e.target.value })} placeholder="如：100件" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="contactPerson">联系人 *</Label>
+                      <Input id="contactPerson" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} placeholder="请输入联系人" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="contactPhone">联系电话 *</Label>
+                      <Input id="contactPhone" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} placeholder="请输入联系电话" />
+                    </div>
+                  </div>
+                </>
               ) : (
                 <>
                   <div className="grid gap-2">
                     <Label htmlFor="title">标题 *</Label>
-                    <Input
-                      id="title"
-                      value={formData.procurementTitle}
-                      onChange={(e) => setFormData({ ...formData, procurementTitle: e.target.value })}
-                      placeholder="请输入标题"
-                    />
+                    <Input id="title" value={formData.procurementTitle} onChange={(e) => setFormData({ ...formData, procurementTitle: e.target.value })} placeholder="请输入标题" />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="company">公司 *</Label>
-                    <Input
-                      id="company"
-                      value={formData.publishingCompany}
-                      onChange={(e) => setFormData({ ...formData, publishingCompany: e.target.value })}
-                      placeholder="请输入公司名称"
-                    />
+                    <Input id="company" value={formData.publishingCompany} onChange={(e) => setFormData({ ...formData, publishingCompany: e.target.value })} placeholder="请输入公司名称" />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="description">描述</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="请输入详细描述"
-                      rows={4}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="factoryPhotos">工厂照片</Label>
-                    <Input
-                      id="factoryPhotos"
-                      type="file"
-                      onChange={(e) => setFormData({ ...formData, factoryPhotos: e.target.files[0] })}
-                      accept="image/*"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="industrialType">工业类型</Label>
-                    <Input
-                      id="industrialType"
-                      value={formData.industrialType}
-                      onChange={(e) => setFormData({ ...formData, industrialType: e.target.value })}
-                      placeholder="请输入工业类型"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="minOrderQuantity">起订量</Label>
-                    <Input
-                      id="minOrderQuantity"
-                      value={formData.minOrderQuantity}
-                      onChange={(e) => setFormData({ ...formData, minOrderQuantity: e.target.value })}
-                      placeholder="请输入起订量"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="priceRange">价格区间</Label>
-                    <Input
-                      id="priceRange"
-                      value={formData.priceRange}
-                      onChange={(e) => setFormData({ ...formData, priceRange: e.target.value })}
-                      placeholder="请输入价格区间"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="contactPerson">联系人</Label>
-                    <Input
-                      id="contactPerson"
-                      value={formData.contactPerson}
-                      onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                      placeholder="请输入联系人"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="contactPhone">联系电话</Label>
-                    <Input
-                      id="contactPhone"
-                      value={formData.contactPhone}
-                      onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                      placeholder="请输入联系电话"
-                    />
+                    <Textarea id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="请输入详细描述" rows={4} />
                   </div>
                 </>
               )}

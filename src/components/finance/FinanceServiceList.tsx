@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '../ui/badge';
-import { Plus, Search, Edit, Trash2, Eye, FileEdit } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, FileEdit, Save, Upload } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 
@@ -44,8 +44,29 @@ export default function FinanceServiceList() {
     institution: '',
     type: '',
     rate: '',
+    amountRange: '',
+    bank: '',
+    loanTerm: '',
+    requirements: '',
     description: '',
   });
+
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setUploadProgress(1);
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          toast.success('附件上传完成');
+          return 100;
+        }
+        return prev + 7;
+      });
+    }, 120);
+  };
 
   const filteredServices = services.filter(service => {
     const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,7 +78,8 @@ export default function FinanceServiceList() {
 
   const handleAdd = () => {
     setEditMode(false);
-    setFormData({ name: '', institution: '', type: '', rate: '', description: '' });
+    setFormData({ name: '', institution: '', type: '', rate: '', amountRange: '', bank: '', loanTerm: '', requirements: '', description: '' });
+    setUploadProgress(0);
     setShowAddDialog(true);
   };
 
@@ -75,29 +97,36 @@ export default function FinanceServiceList() {
   };
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.institution || !formData.type || !formData.rate) {
-      toast.error('请填写所有必填项');
+    if (!formData.name || !formData.type || !formData.rate) {
+      toast.error('请填写服务名称、类型和利率');
       return;
     }
+
+    const institutionValue = formData.institution && formData.institution.trim() !== ''
+      ? formData.institution
+      : '金融机构未填写';
 
     if (editMode && selectedService) {
       setServices(services.map(s => 
         s.id === selectedService.id 
-          ? { ...s, ...formData }
+          ? { ...s, name: formData.name, institution: institutionValue, type: formData.type, rate: formData.rate }
           : s
       ));
       toast.success('金融服务已更新');
     } else {
       const newService: Service = {
         id: String(services.length + 1),
-        ...formData,
+        name: formData.name,
+        institution: institutionValue,
+        type: formData.type,
+        rate: formData.rate,
         status: '待审核',
         createTime: new Date().toISOString().split('T')[0],
       };
       setServices([newService, ...services]);
       toast.success('金融服务已添加');
     }
-    
+
     setShowAddDialog(false);
   };
 
@@ -108,7 +137,22 @@ export default function FinanceServiceList() {
 
   const confirmDelete = () => {
     if (selectedService) {
+      const deleted = selectedService;
       setServices(services.filter(s => s.id !== selectedService.id));
+      const record = {
+        id: `${Date.now()}-${deleted.id}`,
+        type: '金融服务',
+        action: '删除',
+        target: `${deleted.name} - ${deleted.institution}`,
+        operator: '金融办管理员',
+        timestamp: new Date().toLocaleString(),
+      };
+      try {
+        const key = 'financeHistory';
+        const existing = localStorage.getItem(key);
+        const list = existing ? JSON.parse(existing) : [];
+        localStorage.setItem(key, JSON.stringify([record, ...list]));
+      } catch {}
       toast.success('金融服务已删除');
     }
     setShowDeleteDialog(false);
@@ -205,12 +249,14 @@ export default function FinanceServiceList() {
                     <TableCell>{service.createTime}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleViewDetail(service)}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => handleViewDetail(service)}>
                           <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(service)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(service)}>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -222,37 +268,26 @@ export default function FinanceServiceList() {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
+      {/* Add/Edit Dialog: Replace content with enterprise financial publish form */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{editMode ? '编辑金融服务' : '新增金融服务'}</DialogTitle>
-            <DialogDescription>
-              {editMode ? '修改金融服务信息' : '填写以下信息以添加新的金融服务'}
-            </DialogDescription>
+            <DialogDescription>{editMode ? '修改金融服务信息' : '填写以下信息以添加新的金融服务'}</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">服务名称 *</Label>
+              <Label htmlFor="finance-name">服务名称 *</Label>
               <Input
-                id="name"
+                id="finance-name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="请输入服务名称"
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="institution">金融机构 *</Label>
-              <Input
-                id="institution"
-                value={formData.institution}
-                onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                placeholder="请输入金融机构名称"
-              />
-            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="type">服务类型 *</Label>
+                <Label htmlFor="finance-type">服务类型 *</Label>
                 <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="选择类型" />
@@ -265,9 +300,9 @@ export default function FinanceServiceList() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="rate">利率 *</Label>
+                <Label htmlFor="finance-rate">利率 *</Label>
                 <Input
-                  id="rate"
+                  id="finance-rate"
                   value={formData.rate}
                   onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
                   placeholder="如：4.5%"
@@ -275,24 +310,77 @@ export default function FinanceServiceList() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">服务描述</Label>
+              <Label htmlFor="finance-amount-range">额度范围</Label>
+              <Input
+                id="finance-amount-range"
+                value={formData.amountRange}
+                onChange={(e) => setFormData({ ...formData, amountRange: e.target.value })}
+                placeholder="如：10万-100万"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="finance-bank">金融机构</Label>
+              <Input
+                id="finance-bank"
+                value={formData.bank}
+                onChange={(e) => setFormData({ ...formData, bank: e.target.value })}
+                placeholder="如：招商银行/融资机构"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="finance-loan-term">贷款期限</Label>
+              <Input
+                id="finance-loan-term"
+                value={formData.loanTerm}
+                onChange={(e) => setFormData({ ...formData, loanTerm: e.target.value })}
+                placeholder="如：1年"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="finance-requirements">申请要求</Label>
               <Textarea
-                id="description"
+                id="finance-requirements"
+                value={formData.requirements}
+                onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+                placeholder="请输入申请要求"
+                rows={2}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="finance-description">服务描述</Label>
+              <Textarea
+                id="finance-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="请输入服务描述"
                 rows={4}
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="finance-file">附件上传</Label>
+              <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-[#1E3A8A] transition-colors cursor-pointer">
+                <input id="finance-file" type="file" className="hidden" onChange={handleFileUpload} />
+                <label htmlFor="finance-file" className="cursor-pointer">
+                  <Upload className="h-8 w-8 mx-auto text-slate-400 mb-2" />
+                  <p className="text-slate-600">点击或拖拽文件到此处上传</p>
+                  {uploadProgress > 0 && uploadProgress < 100 && (
+                    <div className="mt-4 w-full bg-slate-200 rounded-full h-2">
+                      <div className="bg-[#1E3A8A] h-2 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => toast.success('草稿已保存')}>
+                <Save className="h-4 w-4 mr-2" />
+                保存草稿
+              </Button>
+              <Button onClick={handleSubmit} className="flex-1 bg-[#1E3A8A] hover:bg-[#1E3A8A]/90">
+                立即发布
+              </Button>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
-              取消
-            </Button>
-            <Button onClick={handleSubmit} className="bg-[#1E3A8A] hover:bg-[#1E3A8A]/90">
-              {editMode ? '保存' : '添加'}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -360,4 +448,4 @@ export default function FinanceServiceList() {
     </div>
   );
 }
-
+
