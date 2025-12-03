@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Button, ButtonProps } from './ui/button';
-import { ScrollArea } from './ui/scroll-area';
 import { Bell, ChevronDown, LogOut, User, Menu, ChevronRight, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -19,8 +18,8 @@ import { Input } from './ui/input';
 interface MenuItem {
   id: string;
   label: string;
-  icon: React.ReactNode;
-  children?: { id: string; label: string }[];
+  icon?: React.ReactNode;
+  children?: MenuItem[];
 }
 
 interface DashboardLayoutProps {
@@ -85,7 +84,7 @@ export default function DashboardLayout({
       <motion.aside
         initial={false}
         animate={{ width: sidebarCollapsed ? 80 : 280 }}
-        className="bg-[#1E3A8A] text-white flex flex-col shadow-2xl"
+        className="bg-[#1E3A8A] text-white flex flex-col shadow-2xl z-50"
       >
         <div className="h-16 flex items-center justify-between px-6 border-b border-white/10">
           {!sidebarCollapsed && (
@@ -107,7 +106,7 @@ export default function DashboardLayout({
           </Button>
         </div>
 
-        <ScrollArea className="flex-1 px-3 py-4">
+        <div className="flex-1 overflow-y-auto px-3 py-4">
           <nav className="space-y-1">
             {menuItems.map((item) => (
               <div key={item.id}>
@@ -138,17 +137,59 @@ export default function DashboardLayout({
                           className="ml-6 mt-1 space-y-1 overflow-hidden"
                         >
                           {item.children.map((child) => (
-                            <button
-                              key={child.id}
-                              onClick={() => onPageChange(child.id)}
-                              className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                                currentPage === child.id
-                                  ? 'bg-white/20 text-white'
-                                  : 'hover:bg-white/10 text-white/80'
-                              }`}
-                            >
-                              {child.label}
-                            </button>
+                            <div key={child.id}>
+                              {child.children ? (
+                                <>
+                                  <button
+                                    onClick={() => toggleMenu(child.id)}
+                                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-white/90"
+                                  >
+                                    <span>{child.label}</span>
+                                    <ChevronRight
+                                      className={`h-3 w-3 transition-transform ${
+                                        expandedMenus.includes(child.id) ? 'rotate-90' : ''
+                                      }`}
+                                    />
+                                  </button>
+                                  <AnimatePresence>
+                                    {expandedMenus.includes(child.id) && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="ml-4 mt-1 space-y-1 overflow-hidden"
+                                      >
+                                        {child.children.map((grandchild) => (
+                                          <button
+                                            key={grandchild.id}
+                                            onClick={() => onPageChange(grandchild.id)}
+                                            className={`w-full text-left px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                                              currentPage === grandchild.id
+                                                ? 'bg-white/20 text-white'
+                                                : 'hover:bg-white/10 text-white/70'
+                                            }`}
+                                          >
+                                            {grandchild.label}
+                                          </button>
+                                        ))}
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </>
+                              ) : (
+                                <button
+                                  key={child.id}
+                                  onClick={() => onPageChange(child.id)}
+                                  className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                                    currentPage === child.id
+                                      ? 'bg-white/20 text-white'
+                                      : 'hover:bg-white/10 text-white/80'
+                                  }`}
+                                >
+                                  {child.label}
+                                </button>
+                              )}
+                            </div>
                           ))}
                         </motion.div>
                       )}
@@ -170,7 +211,7 @@ export default function DashboardLayout({
               </div>
             ))}
           </nav>
-        </ScrollArea>
+        </div>
 
         {!sidebarCollapsed && (
           <div className="p-4 border-t border-white/10">
@@ -247,7 +288,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50">
           <div className="p-6">{children}</div>
         </main>
       </div>

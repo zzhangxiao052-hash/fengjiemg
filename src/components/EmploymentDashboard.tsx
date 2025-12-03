@@ -19,7 +19,7 @@ export default function EmploymentDashboard({ username, onLogout }: EmploymentDa
     switch (currentPage) {
       case 'return-management':
       default:
-        return <VisualizationManagement onlyReturn />;
+        return <VisualizationManagement pageType="return" />;
     }
   };
 

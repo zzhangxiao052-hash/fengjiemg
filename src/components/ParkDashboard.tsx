@@ -13,13 +13,22 @@ import AdManagement from './park/AdManagement';
 // import RoleManagement from './park/RoleManagement';
 import StatisticsPage from './park/StatisticsPage';
 import SystemSettings from './park/SystemSettings';
-import { LayoutDashboard, Settings, FileText, Building, Megaphone, BookOpen, Bell, Users, BarChart3, History, Presentation } from 'lucide-react';
+import { LayoutDashboard, Settings, FileText, Building, Megaphone, BookOpen, Bell, Users, BarChart3, History, Presentation, Home } from 'lucide-react';
 import AnnouncementManagement from './park/AnnouncementManagement';
 import ParkDataCollectionManagement from './park/ParkDataCollectionManagement';
 import ParkHistory from './park/ParkHistory';
 import VisualizationManagement from './park/VisualizationManagement';
+import EntrepreneurshipMapConfigNew from './park/EntrepreneurshipMapConfigNew'; // 新版配置页面(两列布局)
 import DynamicManagement from './park/DynamicManagement';
 import ContentSettings from './park/ContentSettings';
+import StandardFactoryPage from './park/StandardFactoryPage';
+import RetailShopPage from './park/RetailShopPage';
+import DormitoryPage from './park/DormitoryPage';
+import ChargingStandardsPage from './park/ChargingStandardsPage';
+import ParkDetailConfig from './park/ParkDetailConfig';
+import EnterpriseDetailConfig from './park/EnterpriseDetailConfig';
+import IntroPopupConfig from './park/IntroPopupConfig';
+import { useAssetStore } from '../stores/assetStore';
 
 
 interface ParkDashboardProps {
@@ -31,6 +40,13 @@ export default function ParkDashboard({ username, onLogout }: ParkDashboardProps
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [currentSystemManagementPage, setCurrentSystemManagementPage] = useState('home');
   const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<string | null>(null);
+  const [visualizationPageType, setVisualizationPageType] = useState('overview');
+  
+  // Initialize asset store with mock data
+  const initializeMockData = useAssetStore(state => state.initializeMockData);
+  React.useEffect(() => {
+    initializeMockData();
+  }, []);
 
   const menuItems = [
     { id: 'dashboard', label: '仪表盘', icon: <LayoutDashboard className="h-5 w-5" /> },
@@ -64,9 +80,39 @@ export default function ParkDashboard({ username, onLogout }: ParkDashboardProps
       id: "park-data-collection-management",
     },
     {
-      id: 'visualization-management',
+      id: 'visualization-management-group',
       label: '可视化页面管理',
       icon: <Presentation className="h-5 w-5" />,
+      children: [
+        { id: 'visualization-overview', label: '园区总览页面管理' },
+        { id: 'visualization-economy', label: '经济运行页面管理' },
+        { id: 'visualization-elements', label: '要素保障页面管理' },
+        {
+          id: 'visualization-assets-group',
+          label: '资产管理页面管理',
+          children: [
+            { id: 'asset-factory', label: '标准厂房管理' },
+            { id: 'asset-shop', label: '门市管理' },
+            { id: 'asset-dormitory', label: '宿舍管理' },
+            { id: 'asset-pricing', label: '收费标准管理' },
+          ],
+        },
+        { id: 'visualization-investment', label: '招商引资页面管理' },
+        { id: 'visualization-projects', label: '建设项目页面管理' },
+        { id: 'visualization-services', label: '企业服务页面管理' },
+        { id: 'visualization-video', label: '视频监控页面管理' },
+        { id: 'visualization-energy', label: '能源一张图页面管理' },
+        {
+          id: 'visualization-return-group',
+          label: '返乡创业一张图页面管理',
+          children: [
+            { id: 'visualization-return-home', label: '驾驶舱主页配置' },
+            { id: 'visualization-return-park', label: '园区详情页配置' },
+            { id: 'visualization-return-enterprise', label: '企业详情页配置' },
+            { id: 'visualization-return-intro', label: '介绍弹窗配置' },
+          ],
+        },
+      ],
     },
     {
       id: 'history',
@@ -106,6 +152,14 @@ export default function ParkDashboard({ username, onLogout }: ParkDashboardProps
         return <DynamicManagement />;
       case 'content-settings':
         return <ContentSettings />;
+      case 'asset-factory':
+        return <StandardFactoryPage />;
+      case 'asset-shop':
+        return <RetailShopPage />;
+      case 'asset-dormitory':
+        return <DormitoryPage />;
+      case 'asset-pricing':
+        return <ChargingStandardsPage />;
       case 'policy':
         return <PolicyManagement />;
       case 'content':
@@ -122,8 +176,33 @@ export default function ParkDashboard({ username, onLogout }: ParkDashboardProps
         return <StatisticsPage />;
       case "settings":
         return <SystemSettings />;
-      case 'visualization-management':
-        return <VisualizationManagement />;
+      case 'visualization-overview':
+        return <VisualizationManagement pageType="overview" />;
+      case 'visualization-economy':
+        return <VisualizationManagement pageType="economy" />;
+      case 'visualization-elements':
+        return <VisualizationManagement pageType="elements" />;
+      case 'visualization-assets':
+        return <VisualizationManagement pageType="assets" />;
+      case 'visualization-investment':
+        return <VisualizationManagement pageType="investment" />;
+      case 'visualization-projects':
+        return <VisualizationManagement pageType="projects" />;
+      case 'visualization-services':
+        return <VisualizationManagement pageType="services" />;
+      case 'visualization-video':
+        return <VisualizationManagement pageType="video" />;
+      case 'visualization-energy':
+        return <VisualizationManagement pageType="energy" />;
+      // 返乡创业一张图子页面
+      case 'visualization-return-home':
+        return <EntrepreneurshipMapConfigNew />; // 驾驶舱主页配置
+      case 'visualization-return-park':
+        return <ParkDetailConfig />;
+      case 'visualization-return-enterprise':
+        return <EnterpriseDetailConfig />;
+      case 'visualization-return-intro':
+        return <IntroPopupConfig />;
       case "history":
         return <ParkHistory />;
       default:

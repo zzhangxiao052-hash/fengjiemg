@@ -70,8 +70,8 @@ export default defineConfig({
     outDir: 'dist',
   },
   server: {
-    port: 3000,
-    strictPort: true,
+    port: 3001,
+    strictPort: false,
     open: true,
     hmr: {
       protocol: 'ws',
