@@ -206,17 +206,8 @@ export default function OverviewSettings() {
       formRef={formRef}
       initialValues={initialValues}
       onFinish={handleFinish}
-      submitter={{
-        render: (props, dom) => {
-          return (
-            <div style={{ position: 'fixed', top: 20, right: 40, zIndex: 999 }}>
-              <Button type="primary" icon={<SaveOutlined />} onClick={() => props.form?.submit()}>
-                保存全部配置
-              </Button>
-            </div>
-          );
-        },
-      }}
+      // submitter removed to avoid duplicate top-right fixed button; submission
+      // should be handled by page-level controls when embedded in VisualizationManagement
       layout="horizontal"
     >
       <ProCard ghost gutter={[16, 16]} direction="column">

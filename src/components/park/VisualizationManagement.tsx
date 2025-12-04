@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Input } from '../ui/input';
@@ -676,6 +676,25 @@ export default function VisualizationManagement({ pageType = 'overview' }: { pag
     toast.success('视频监控页面配置已保存');
   };
 
+  // ref for EnergyOneMap child so we can trigger its save from the page header
+  const energySettingsRef = useRef<any>(null);
+
+  const renderEnergySettings = () => {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold text-slate-800">能源一张图页面管理</h2>
+          <Button onClick={() => energySettingsRef.current?.save?.()} className="bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white gap-2">
+            <Save className="h-4 w-4 mr-2" />
+            保存全部配置
+          </Button>
+        </div>
+
+        <EnergyOneMapSettings ref={energySettingsRef} />
+      </div>
+    );
+  };
+
   // --- Helper Functions for Other Tabs ---
   const economyItems = useMemo(() => [
     '各产业产值统计', '各产业投资统计', '各产业税收统计', '眼镜产业', '清洁能源产业', '农副食品及食品加工业'
@@ -1279,7 +1298,19 @@ export default function VisualizationManagement({ pageType = 'overview' }: { pag
 
   // --- Assets Render Component ---
   const renderAssetsSettings = () => {
-    return <AssetsSettings value={assetsData} onChange={setAssetsData} />;
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold text-slate-800">资产管理页面配置</h2>
+          <Button onClick={handleSaveAssets} className="bg-[#1E3A8A] hover:bg-[#1E3A8A]/90">
+            <Save className="w-4 h-4 mr-2" />
+            保存全部配置
+          </Button>
+        </div>
+
+        <AssetsSettings value={assetsData} onChange={setAssetsData} />
+      </div>
+    );
   };
 
   const renderAssetsSettingsLegacy = () => {
@@ -2281,10 +2312,11 @@ export default function VisualizationManagement({ pageType = 'overview' }: { pag
   const renderServicesSettings = () => {
     return (
       <div className="space-y-6">
-        <div className="flex justify-end">
-          <Button onClick={handleSaveServices} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
-            <Save className="h-4 w-4" />
-            保存配置
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold text-slate-800">企业服务页面管理</h2>
+          <Button onClick={handleSaveServices} className="bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white gap-2">
+            <Save className="h-4 w-4 mr-2" />
+            保存全部配置
           </Button>
         </div>
 
@@ -2697,7 +2729,7 @@ export default function VisualizationManagement({ pageType = 'overview' }: { pag
   const renderPageContent = () => {
     switch (pageType) {
       case 'overview':
-        return <OverviewSettings />;
+        return renderOverviewSettings();
       case 'economy':
         return (
           <EconomySettings 
@@ -2725,7 +2757,7 @@ export default function VisualizationManagement({ pageType = 'overview' }: { pag
           />
         );
       case 'energy':
-        return <EnergyOneMapSettings />;
+        return renderEnergySettings();
       case 'return':
         return renderCategory('return', '返乡创业一张图页面管理', returnEntrepreneurshipItems);
       default:
@@ -2759,6 +2791,8 @@ export default function VisualizationManagement({ pageType = 'overview' }: { pag
         return '园区总览页面管理';
     }
   };
+
+  
 
   return (
     <div className="space-y-6">

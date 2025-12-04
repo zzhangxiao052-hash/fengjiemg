@@ -4,7 +4,7 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Plus, Trash2, Save, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 // 数据类型定义
@@ -132,10 +132,7 @@ const EntrepreneurshipMapConfigNew: React.FC = () => {
     toast.success('配置已保存');
   };
 
-  const handleReset = () => {
-    setConfig(initialConfig);
-    toast.info('配置已重置');
-  };
+
 
   const updateIntroduction = (value: string) => {
     setConfig({ ...config, introduction: value });
@@ -239,10 +236,6 @@ const EntrepreneurshipMapConfigNew: React.FC = () => {
               <p className="text-sm text-slate-500 mt-1">配置大屏各区域显示内容与数据</p>
             </div>
             <div className="flex gap-3">
-              <Button className="border hover:bg-slate-100" onClick={handleReset}>
-                <RotateCcw className="w-4 h-4 mr-2" />
-                重置
-              </Button>
               <Button className="bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white" onClick={handleSave}>
                 <Save className="w-4 h-4 mr-2" />
                 保存配置

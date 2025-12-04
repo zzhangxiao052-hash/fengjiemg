@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { ProCard, ProForm, ProFormSelect, ProFormTextArea, ProFormDigit, EditableProTable } from '@ant-design/pro-components';
 import type { ProColumns, ActionType } from '@ant-design/pro-components';
 import { Button, message } from 'antd';
@@ -58,7 +58,9 @@ const initialEnergyData: EnergyOneMapData = {
   dualCarbonSink: '197, 322, 237, 317, 542, 336, 171, 189, 555, 187, 453, 276',
 };
 
-export default function EnergyOneMapSettings() {
+export interface EnergyOneMapSettingsHandle { save: () => void }
+
+const EnergyOneMapSettings = forwardRef<EnergyOneMapSettingsHandle, {}>((props, ref) => {
   const [data, setData] = useState<EnergyOneMapData>(initialEnergyData);
   const [editableKeysA, setEditableRowKeysA] = useState<React.Key[]>([]);
   const formRef = useRef<any>();
@@ -68,6 +70,10 @@ export default function EnergyOneMapSettings() {
     console.log('Saving data:', data);
     message.success('能源一张图配置已保存');
   };
+
+  useImperativeHandle(ref, () => ({
+    save: handleSave,
+  }));
 
   // --- Columns Definitions ---
 
@@ -121,17 +127,8 @@ export default function EnergyOneMapSettings() {
     <div style={{ background: '#F5F7FA', padding: '24px' }}>
       <ProForm
         formRef={formRef}
-        submitter={{
-          render: () => {
-            return (
-              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                 <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
-                  保存全部配置
-                </Button>
-              </div>
-            );
-          },
-        }}
+        // remove default submitter (we use parent header save)
+        submitter={false}
         initialValues={data}
         onValuesChange={(changedValues, allValues) => {
             // Sync form values to state for simple fields
@@ -270,8 +267,9 @@ export default function EnergyOneMapSettings() {
 
           </ProCard>
         </ProCard>
-        <div style={{ height: 60 }} /> {/* Spacer for fixed footer */}
       </ProForm>
     </div>
   );
-}
+});
+
+export default EnergyOneMapSettings;
