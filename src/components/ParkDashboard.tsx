@@ -91,6 +91,7 @@ export default function ParkDashboard({ username, onLogout }: ParkDashboardProps
           id: 'visualization-assets-group',
           label: '资产管理页面管理',
           children: [
+            { id: 'asset-cockpit', label: '驾驶舱页面管理' },
             { id: 'asset-factory', label: '标准厂房管理' },
             { id: 'asset-shop', label: '门市管理' },
             { id: 'asset-dormitory', label: '宿舍管理' },
@@ -152,6 +153,8 @@ export default function ParkDashboard({ username, onLogout }: ParkDashboardProps
         return <DynamicManagement />;
       case 'content-settings':
         return <ContentSettings />;
+      case 'asset-cockpit':
+        return <VisualizationManagement pageType="assets" />;
       case 'asset-factory':
         return <StandardFactoryPage />;
       case 'asset-shop':

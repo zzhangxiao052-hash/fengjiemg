@@ -29,19 +29,11 @@ export interface EnergyOneMapData {
   }[];
 
   // Module B: Output Value (Bar)
-  outputValueStats: {
-    id: string;
-    month: number;
-    value: number;
-  }[];
+  outputValueStats: string;
 
   // Module C: Dual Carbon (Line)
-  dualCarbonStats: {
-    id: string;
-    month: string;
-    reduction: number;
-    sink: number;
-  }[];
+  dualCarbonReduction: string;
+  dualCarbonSink: string;
 }
 
 const initialEnergyData: EnergyOneMapData = {
@@ -61,24 +53,14 @@ const initialEnergyData: EnergyOneMapData = {
     { id: '4', name: '风力发电', value: 210 },
     { id: '5', name: '光伏', value: 210 },
   ],
-  outputValueStats: Array.from({ length: 12 }, (_, i) => ({
-    id: `${i + 1}`,
-    month: i + 1,
-    value: Math.floor(Math.random() * 10000) + 20000,
-  })),
-  dualCarbonStats: Array.from({ length: 12 }, (_, i) => ({
-    id: `${i + 1}`,
-    month: `${i + 1}月`,
-    reduction: Math.floor(Math.random() * 500) + 100,
-    sink: Math.floor(Math.random() * 500) + 100,
-  })),
+  outputValueStats: '29238, 20642, 28353, 28318, 20383, 29105, 27615, 27168, 25338, 25545, 22132, 22715',
+  dualCarbonReduction: '491, 325, 215, 471, 284, 261, 318, 206, 409, 155, 158, 546',
+  dualCarbonSink: '197, 322, 237, 317, 542, 336, 171, 189, 555, 187, 453, 276',
 };
 
 export default function EnergyOneMapSettings() {
   const [data, setData] = useState<EnergyOneMapData>(initialEnergyData);
   const [editableKeysA, setEditableRowKeysA] = useState<React.Key[]>([]);
-  const [editableKeysB, setEditableRowKeysB] = useState<React.Key[]>([]);
-  const [editableKeysC, setEditableRowKeysC] = useState<React.Key[]>([]);
   const formRef = useRef<any>();
 
   const handleSave = async () => {
@@ -133,69 +115,7 @@ export default function EnergyOneMapSettings() {
     },
   ];
 
-  const columnsB: ProColumns<EnergyOneMapData['outputValueStats'][0]>[] = [
-    {
-      title: '月份',
-      dataIndex: 'month',
-      valueType: 'digit',
-      editable: false, // Assuming months are fixed 1-12 for simplicity, or make editable
-      width: '20%',
-    },
-    {
-      title: '产值金额 (万元)',
-      dataIndex: 'value',
-      valueType: 'digit',
-      formItemProps: {
-        rules: [{ required: true, message: '此项为必填项' }],
-      },
-    },
-    {
-      title: '操作',
-      valueType: 'option',
-      render: (text, record, _, action) => [
-        <a
-          key="editable"
-          onClick={() => {
-            action?.startEditable?.(record.id);
-          }}
-        >
-          编辑
-        </a>,
-      ],
-    },
-  ];
 
-  const columnsC: ProColumns<EnergyOneMapData['dualCarbonStats'][0]>[] = [
-    {
-      title: '月份/时间点',
-      dataIndex: 'month',
-      width: '20%',
-    },
-    {
-      title: '减碳量 (数值)',
-      dataIndex: 'reduction',
-      valueType: 'digit',
-    },
-    {
-      title: '碳汇量 (数值)',
-      dataIndex: 'sink',
-      valueType: 'digit',
-    },
-    {
-      title: '操作',
-      valueType: 'option',
-      render: (text, record, _, action) => [
-        <a
-          key="editable"
-          onClick={() => {
-            action?.startEditable?.(record.id);
-          }}
-        >
-          编辑
-        </a>,
-      ],
-    },
-  ];
 
   return (
     <div style={{ background: '#F5F7FA', padding: '24px' }}>
@@ -204,7 +124,7 @@ export default function EnergyOneMapSettings() {
         submitter={{
           render: () => {
             return (
-              <div style={{ position: 'fixed', bottom: 0, right: 0, zIndex: 999, padding: '16px', background: '#fff', width: '100%', borderTop: '1px solid #e8e8e8', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                  <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
                   保存全部配置
                 </Button>
@@ -324,36 +244,28 @@ export default function EnergyOneMapSettings() {
 
             {/* Module B */}
             <ProCard title="生态工业产值统计 (柱状图)" bordered type="inner">
-               <EditableProTable<EnergyOneMapData['outputValueStats'][0]>
-                rowKey="id"
-                headerTitle="月度产值数据"
-                recordCreatorProps={false} // Disable adding rows if we want fixed 12 months
-                columns={columnsB}
-                value={data.outputValueStats}
-                onChange={(value) => setData({ ...data, outputValueStats: value as any })}
-                editable={{
-                  type: 'multiple',
-                  editableKeys: editableKeysB,
-                  onChange: setEditableRowKeysB,
-                }}
-              />
+               <ProFormTextArea
+                  name="outputValueStats"
+                  label="柱状图数据 (逗号分隔数值)"
+                  placeholder="请输入12个月份的数值，用英文逗号分隔，如: 2000, 3000, ..."
+                  fieldProps={{ rows: 3 }}
+               />
             </ProCard>
 
             {/* Module C */}
             <ProCard title="生态工业双碳统计 (双折线图)" bordered type="inner">
-               <EditableProTable<EnergyOneMapData['dualCarbonStats'][0]>
-                rowKey="id"
-                headerTitle="双碳数据"
-                recordCreatorProps={false}
-                columns={columnsC}
-                value={data.dualCarbonStats}
-                onChange={(value) => setData({ ...data, dualCarbonStats: value as any })}
-                editable={{
-                  type: 'multiple',
-                  editableKeys: editableKeysC,
-                  onChange: setEditableRowKeysC,
-                }}
-              />
+               <ProFormTextArea
+                  name="dualCarbonReduction"
+                  label="减碳量数据 (逗号分隔数值)"
+                  placeholder="请输入12个月份的减碳量数值，用英文逗号分隔"
+                  fieldProps={{ rows: 3 }}
+               />
+               <ProFormTextArea
+                  name="dualCarbonSink"
+                  label="碳汇量数据 (逗号分隔数值)"
+                  placeholder="请输入12个月份的碳汇量数值，用英文逗号分隔"
+                  fieldProps={{ rows: 3 }}
+               />
             </ProCard>
 
           </ProCard>

@@ -210,7 +210,8 @@ const initialAssetsData: AssetsData = {
     metrics: [
       { id: 'lu1', name: '用地面积', value: '2654', unit: '亩' },
       { id: 'lu2', name: '已用面积', value: '2654', unit: '亩' },
-      { id: 'lu3', name: '出让面积', value: '2654', unit: '亩' },
+      { id: 'lu3', name: '自用面积', value: '2654', unit: '亩' },
+      { id: 'lu4', name: '出让面积', value: '2654', unit: '亩' },
     ]
   },
   constructionLand: {

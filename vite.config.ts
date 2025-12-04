@@ -10,6 +10,9 @@ export default defineConfig({
       style: 'css',
     }),
   ],
+  build: {
+    outDir: 'dist',
+  },
   esbuild: {
     target: 'es2020',
   },
@@ -64,10 +67,6 @@ export default defineConfig({
       '@radix-ui/react-accordion@1.2.3': '@radix-ui/react-accordion',
       '@': path.resolve(__dirname, './src'),
     },
-  },
-  build: {
-    target: 'es2020',
-    outDir: 'dist',
   },
   server: {
     port: 3001,
