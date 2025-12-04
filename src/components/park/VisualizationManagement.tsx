@@ -265,18 +265,30 @@ interface MetricConfig {
 
 // --- Types for Elements Page ---
 interface ElementMetric { id: string; name: string; value: string; unit: string; growth: string; }
-interface TimeSeriesData { id: string; label: string; value: string; } // label can be month or year
-interface ElementChartData {
-  monthly: TimeSeriesData[];
-  yearly: TimeSeriesData[];
+interface TimeSeriesItem {
+  label: string;
+  value: string;
+}
+
+interface ElementStats {
+  monthly: TimeSeriesItem[];
+  yearly: TimeSeriesItem[];
 }
 
 interface ElementsData {
   energyMetrics: ElementMetric[];
-  waterStats: ElementChartData;
-  electricityStats: ElementChartData;
-  gasStats: ElementChartData;
+  waterStats: ElementStats;
+  electricityStats: ElementStats;
+  gasStats: ElementStats;
 }
+
+const generateMonthlyData = (values: string[]) => {
+  return values.map((val, idx) => ({ label: `${idx + 1}月`, value: val }));
+};
+
+const generateYearlyData = (startYear: number, values: string[]) => {
+  return values.map((val, idx) => ({ label: `${startYear + idx}年`, value: val }));
+};
 
 const initialElementsData: ElementsData = {
   energyMetrics: [
@@ -285,16 +297,16 @@ const initialElementsData: ElementsData = {
     { id: 'em3', name: '年度用气量统计', value: '2540', unit: '万立方', growth: '42' },
   ],
   waterStats: {
-    monthly: Array.from({ length: 12 }, (_, i) => ({ id: `wm-${i}`, label: `${String(i + 1).padStart(2, '0')}`, value: String(Math.floor(Math.random() * 1000) + 1000) })),
-    yearly: Array.from({ length: 5 }, (_, i) => ({ id: `wy-${i}`, label: `${2021 + i}`, value: String(Math.floor(Math.random() * 1000) + 2000) })),
+    monthly: generateMonthlyData(['1587', '1720', '1427', '1326', '1390', '1281', '1701', '1162', '1008', '1960', '1921', '1856']),
+    yearly: generateYearlyData(2021, ['2540', '2680', '2890', '3100', '3350']),
   },
   electricityStats: {
-    monthly: Array.from({ length: 12 }, (_, i) => ({ id: `em-${i}`, label: `${String(i + 1).padStart(2, '0')}`, value: String(Math.floor(Math.random() * 1000) + 1000) })),
-    yearly: Array.from({ length: 5 }, (_, i) => ({ id: `ey-${i}`, label: `${2021 + i}`, value: String(Math.floor(Math.random() * 1000) + 2000) })),
+    monthly: generateMonthlyData(['1220', '1926', '1957', '1982', '1831', '1835', '1880', '1340', '1113', '1918', '1574', '1232']),
+    yearly: generateYearlyData(2021, ['2540', '2680', '2890', '3100', '3350']),
   },
   gasStats: {
-    monthly: Array.from({ length: 12 }, (_, i) => ({ id: `gm-${i}`, label: `${String(i + 1).padStart(2, '0')}`, value: String(Math.floor(Math.random() * 1000) + 1000) })),
-    yearly: Array.from({ length: 5 }, (_, i) => ({ id: `gy-${i}`, label: `${2021 + i}`, value: String(Math.floor(Math.random() * 1000) + 2000) })),
+    monthly: generateMonthlyData(['1380', '1032', '1440', '1784', '1115', '1914', '1902', '1262', '1497', '1294', '1174', '1667']),
+    yearly: generateYearlyData(2021, ['2540', '2680', '2890', '3100', '3350']),
   },
 };
 

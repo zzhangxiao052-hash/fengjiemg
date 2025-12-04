@@ -1,24 +1,36 @@
 import React, { useState } from 'react';
 import { ProCard, EditableProTable } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
-import { Tabs } from 'antd';
+import { Tabs, Input, Row, Col } from 'antd';
 
 // --- Types ---
 export interface ElementMetric { id: string; name: string; value: string; unit: string; growth: string; }
-export interface TimeSeriesData { id: string; label: string; value: string; }
-export interface ElementChartData {
-  monthly: TimeSeriesData[];
-  yearly: TimeSeriesData[];
+export interface TimeSeriesItem {
+  label: string;
+  value: string;
+}
+
+export interface ElementStats {
+  monthly: TimeSeriesItem[];
+  yearly: TimeSeriesItem[];
 }
 
 export interface ElementsData {
   energyMetrics: ElementMetric[];
-  waterStats: ElementChartData;
-  electricityStats: ElementChartData;
-  gasStats: ElementChartData;
+  waterStats: ElementStats;
+  electricityStats: ElementStats;
+  gasStats: ElementStats;
 }
 
 // --- Initial Data ---
+const generateMonthlyData = (values: string[]) => {
+  return values.map((val, idx) => ({ label: `${idx + 1}月`, value: val }));
+};
+
+const generateYearlyData = (startYear: number, values: string[]) => {
+  return values.map((val, idx) => ({ label: `${startYear + idx}年`, value: val }));
+};
+
 const initialElementsData: ElementsData = {
   energyMetrics: [
     { id: 'em1', name: '年度用水量统计', value: '2540', unit: '万立方', growth: '42' },
@@ -26,16 +38,16 @@ const initialElementsData: ElementsData = {
     { id: 'em3', name: '年度用气量统计', value: '2540', unit: '万立方', growth: '42' },
   ],
   waterStats: {
-    monthly: Array.from({ length: 12 }, (_, i) => ({ id: `wm-${i}`, label: `${String(i + 1).padStart(2, '0')}`, value: String(Math.floor(Math.random() * 1000) + 1000) })),
-    yearly: Array.from({ length: 5 }, (_, i) => ({ id: `wy-${i}`, label: `${2021 + i}`, value: String(Math.floor(Math.random() * 1000) + 2000) })),
+    monthly: generateMonthlyData(['1587', '1720', '1427', '1326', '1390', '1281', '1701', '1162', '1008', '1960', '1921', '1856']),
+    yearly: generateYearlyData(2021, ['2540', '2680', '2890', '3100', '3350']),
   },
   electricityStats: {
-    monthly: Array.from({ length: 12 }, (_, i) => ({ id: `em-${i}`, label: `${String(i + 1).padStart(2, '0')}`, value: String(Math.floor(Math.random() * 1000) + 1000) })),
-    yearly: Array.from({ length: 5 }, (_, i) => ({ id: `ey-${i}`, label: `${2021 + i}`, value: String(Math.floor(Math.random() * 1000) + 2000) })),
+    monthly: generateMonthlyData(['1220', '1926', '1957', '1982', '1831', '1835', '1880', '1340', '1113', '1918', '1574', '1232']),
+    yearly: generateYearlyData(2021, ['2540', '2680', '2890', '3100', '3350']),
   },
   gasStats: {
-    monthly: Array.from({ length: 12 }, (_, i) => ({ id: `gm-${i}`, label: `${String(i + 1).padStart(2, '0')}`, value: String(Math.floor(Math.random() * 1000) + 1000) })),
-    yearly: Array.from({ length: 5 }, (_, i) => ({ id: `gy-${i}`, label: `${2021 + i}`, value: String(Math.floor(Math.random() * 1000) + 2000) })),
+    monthly: generateMonthlyData(['1380', '1032', '1440', '1784', '1115', '1914', '1902', '1262', '1497', '1294', '1174', '1667']),
+    yearly: generateYearlyData(2021, ['2540', '2680', '2890', '3100', '3350']),
   },
 };
 
@@ -95,108 +107,45 @@ export default function ElementGuaranteeSettings({ value, onChange }: ElementGua
     },
   ];
 
-  const monthlyColumns: ProColumns<TimeSeriesData>[] = [
-    {
-      title: '月份',
-      dataIndex: 'label',
-      valueType: 'select',
-      valueEnum: {
-        '01': '1月', '02': '2月', '03': '3月', '04': '4月', '05': '5月', '06': '6月',
-        '07': '7月', '08': '8月', '09': '9月', '10': '10月', '11': '11月', '12': '12月',
-      },
-      formItemProps: { rules: [{ required: true, message: '此项为必填项' }] },
-    },
-    {
-      title: '数值',
-      dataIndex: 'value',
-      valueType: 'digit',
-    },
-    {
-      title: '操作',
-      valueType: 'option',
-      width: 100,
-      render: (text, record, _, action) => [
-        <a key="edit" onClick={() => action?.startEditable?.(record.id)}>编辑</a>,
-      ],
-    },
-  ];
-
-  const yearlyColumns: ProColumns<TimeSeriesData>[] = [
-    {
-      title: '年份',
-      dataIndex: 'label',
-      formItemProps: { rules: [{ required: true, message: '此项为必填项' }] },
-    },
-    {
-      title: '数值',
-      dataIndex: 'value',
-      valueType: 'digit',
-    },
-    {
-      title: '操作',
-      valueType: 'option',
-      width: 100,
-      render: (text, record, _, action) => [
-        <a key="edit" onClick={() => action?.startEditable?.(record.id)}>编辑</a>,
-        <a key="delete" onClick={() => {
-            // Note: This delete logic needs to be passed down or handled via context if generic
-            // But here we are inside the component, so we need to know which section we are editing.
-            // I will handle this in the render function by creating specific handlers or using closures.
-        }}>删除</a>,
-      ],
-    },
-  ];
-
-  // Helper to create EditableProTable for TimeSeriesData
-  const renderTimeSeriesTable = (
+  // Helper to create Grid Inputs for Stats
+  const renderTrendInputs = (
     section: 'waterStats' | 'electricityStats' | 'gasStats',
     type: 'monthly' | 'yearly'
   ) => {
-    const isMonthly = type === 'monthly';
-    const dataSource = data[section][type];
-    
+    const items = data[section][type];
     return (
-      <EditableProTable<TimeSeriesData>
-        rowKey="id"
-        headerTitle={`${isMonthly ? '月度' : '年度'}数据`}
-        maxLength={isMonthly ? 12 : 10}
-        recordCreatorProps={
-          isMonthly
-            ? false // Usually monthly data is fixed 12 months, but let's allow editing existing ones. 
-            : {
-                position: 'bottom',
-                record: () => ({ id: Date.now().toString(), label: '2026', value: '0' }),
-              }
-        }
-        columns={isMonthly ? monthlyColumns : yearlyColumns}
-        value={dataSource}
-        onChange={(value) => {
-            setData(prev => ({
-                ...prev,
-                [section]: {
-                    ...prev[section],
-                    [type]: [...value]
-                }
-            }));
-        }}
-        editable={{
-          type: 'multiple',
-          onDelete: async (key, row) => {
-             setData(prev => ({
-                ...prev,
-                [section]: {
-                    ...prev[section],
-                    [type]: prev[section][type].filter(item => item.id !== row.id)
-                }
-            }));
-          },
-          onSave: async (key, row) => {
-             // Save is handled by onChange usually for controlled component, 
-             // but EditableProTable might need explicit handling if not fully controlled via value.
-             // With 'value' and 'onChange', it should be controlled.
-          }
-        }}
-      />
+      <div className="bg-gray-50 p-4 rounded-md">
+        <div className="mb-4 text-gray-500">
+          {type === 'monthly' ? '请输入1-12月的数值' : '请输入近5年的数值'}
+        </div>
+        <Row gutter={[16, 16]}>
+          {items.map((item, index) => (
+            <Col key={index} span={type === 'monthly' ? 4 : 4}>
+              <div className="bg-white p-3 rounded border border-gray-200 text-center">
+                <div className="mb-2 font-medium text-gray-600">{item.label}</div>
+                <Input 
+                    value={item.value} 
+                    onChange={(e) => {
+                        const newValue = e.target.value;
+                        setData(prev => {
+                            const newItems = [...prev[section][type]];
+                            newItems[index] = { ...newItems[index], value: newValue };
+                            return {
+                                ...prev,
+                                [section]: {
+                                    ...prev[section],
+                                    [type]: newItems
+                                }
+                            };
+                        });
+                    }} 
+                    className="text-center"
+                />
+              </div>
+            </Col>
+          ))}
+        </Row>
+      </div>
     );
   };
 
@@ -231,12 +180,12 @@ export default function ElementGuaranteeSettings({ value, onChange }: ElementGua
               {
                 key: 'monthly',
                 label: '月度统计',
-                children: renderTimeSeriesTable('waterStats', 'monthly'),
+                children: renderTrendInputs('waterStats', 'monthly'),
               },
               {
                 key: 'yearly',
                 label: '年度统计',
-                children: renderTimeSeriesTable('waterStats', 'yearly'),
+                children: renderTrendInputs('waterStats', 'yearly'),
               },
             ]}
           />
@@ -253,12 +202,12 @@ export default function ElementGuaranteeSettings({ value, onChange }: ElementGua
               {
                 key: 'monthly',
                 label: '月度统计',
-                children: renderTimeSeriesTable('electricityStats', 'monthly'),
+                children: renderTrendInputs('electricityStats', 'monthly'),
               },
               {
                 key: 'yearly',
                 label: '年度统计',
-                children: renderTimeSeriesTable('electricityStats', 'yearly'),
+                children: renderTrendInputs('electricityStats', 'yearly'),
               },
             ]}
           />
@@ -271,12 +220,12 @@ export default function ElementGuaranteeSettings({ value, onChange }: ElementGua
               {
                 key: 'monthly',
                 label: '月度统计',
-                children: renderTimeSeriesTable('gasStats', 'monthly'),
+                children: renderTrendInputs('gasStats', 'monthly'),
               },
               {
                 key: 'yearly',
                 label: '年度统计',
-                children: renderTimeSeriesTable('gasStats', 'yearly'),
+                children: renderTrendInputs('gasStats', 'yearly'),
               },
             ]}
           />
