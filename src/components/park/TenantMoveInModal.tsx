@@ -46,12 +46,54 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
     ];
   }, [pricingPolicies]);
 
+  // Enhanced onFinish to include calculated rent data
+  const handleFinish = async (values: any) => {
+    const selectedAsset = vacantAssets.find((a) => a.id === values.assetId);
+    
+    if (selectedAsset && values.leaseRange) {
+      const leaseStartDate = dayjs(values.leaseRange[0]).toDate();
+      const leaseEndDate = dayjs(values.leaseRange[1]).toDate();
+      const decorationDays = values.decorationDays || 0;
+      const actualPolicyId = values.policyId === 'standard' ? undefined : values.policyId;
+
+      // Calculate rent
+      const calculation = calculate({
+        asset: selectedAsset,
+        leaseStartDate,
+        leaseEndDate,
+        decorationDays,
+        policyId: actualPolicyId
+      });
+
+      if (calculation) {
+        // Add calculated values to form data
+        const enhancedValues = {
+          ...values,
+          receivableRent: calculation.totalRent,
+          receivableProperty: calculation.totalMgmt,
+          // Initialize other financial fields
+          receivedRent: 0,
+          receivedProperty: 0,
+          receivedDeposit: 0,
+          policyReductionRent: 0,
+          policyReductionProperty: 0,
+          policyReductionDeposit: 0,
+          receivableDeposit: 0 // Will be filled manually in fee edit
+        };
+        
+        return await onFinish(enhancedValues);
+      }
+    }
+    
+    return await onFinish(values);
+  };
+
   return (
     <ModalForm
       title="新增租户 (Tenant Move-in)"
       visible={visible}
       onVisibleChange={onVisibleChange}
-      onFinish={onFinish}
+      onFinish={handleFinish}
       width={800}
       layout="horizontal"
       labelCol={{ span: 6 }}

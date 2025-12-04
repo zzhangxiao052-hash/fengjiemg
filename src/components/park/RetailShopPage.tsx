@@ -12,6 +12,8 @@ import { Asset, AssetStatus, AssetType, Zone } from '../../types/asset';
 import { TenantMoveInModal } from './TenantMoveInModal';
 import { UnifiedStatisticsCard, UnifiedStats } from './UnifiedStatisticsCard';
 import { AssetDetailModal } from './AssetDetailModal';
+import { AssetEditModal } from './AssetEditModal';
+import { FeeEditModal } from './FeeEditModal';
 
 // Status badge colors
 const statusColorMap: Record<AssetStatus, string> = {
@@ -30,6 +32,8 @@ const statusLabelMap: Record<AssetStatus, string> = {
 const RetailShopPage: React.FC = () => {
   const actionRef = useRef<ActionType>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [assetEditModalVisible, setAssetEditModalVisible] = useState(false);
+  const [feeEditModalVisible, setFeeEditModalVisible] = useState(false);
   const [moveInModalVisible, setMoveInModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [currentAsset, setCurrentAsset] = useState<Asset | null>(null);
@@ -38,9 +42,10 @@ const RetailShopPage: React.FC = () => {
     leasedCount: 0,
     vacantCount: 0,
     decorationCount: 0,
-    totalReceivable: 0,
-    totalReceived: 0,
-    arrearsAmount: 0
+    receivable: { rent: 0, property: 0, deposit: 0, total: 0 },
+    received: { rent: 0, property: 0, deposit: 0, total: 0 },
+    reduction: { rent: 0, property: 0, deposit: 0, total: 0 },
+    arrears: { rent: 0, property: 0, deposit: 0, total: 0 }
   });
   
   const { 
@@ -59,18 +64,60 @@ const RetailShopPage: React.FC = () => {
     const leasedCount = data.filter(item => item.status === AssetStatus.LEASED).length;
     const vacantCount = data.filter(item => item.status === AssetStatus.VACANT).length;
     const decorationCount = data.filter(item => item.status === AssetStatus.DECORATION).length;
-    const totalReceivable = data.reduce((sum, item) => sum + (item.receivableRent || 0), 0);
-    const totalReceived = data.reduce((sum, item) => sum + (item.receivedRent || 0), 0);
-    const arrearsAmount = totalReceivable - totalReceived;
+    
+    // Receivable
+    const receivableRent = data.reduce((sum, item) => sum + (item.receivableRent || 0), 0);
+    const receivableProperty = data.reduce((sum, item) => sum + (item.receivableProperty || 0), 0);
+    const receivableDeposit = data.reduce((sum, item) => sum + (item.receivableDeposit || 0), 0);
+    const totalReceivable = receivableRent + receivableProperty + receivableDeposit;
+
+    // Received
+    const receivedRent = data.reduce((sum, item) => sum + (item.receivedRent || 0), 0);
+    const receivedProperty = data.reduce((sum, item) => sum + (item.receivedProperty || 0), 0);
+    const receivedDeposit = data.reduce((sum, item) => sum + (item.receivedDeposit || 0), 0);
+    const totalReceived = receivedRent + receivedProperty + receivedDeposit;
+
+    // Reduction
+    const reductionRent = data.reduce((sum, item) => sum + (item.policyReductionRent || 0), 0);
+    const reductionProperty = data.reduce((sum, item) => sum + (item.policyReductionProperty || 0), 0);
+    const reductionDeposit = data.reduce((sum, item) => sum + (item.policyReductionDeposit || 0), 0);
+    const totalReduction = reductionRent + reductionProperty + reductionDeposit;
+
+    // Arrears (Receivable - Received - Reduction)
+    const arrearsRent = receivableRent - receivedRent - reductionRent;
+    const arrearsProperty = receivableProperty - receivedProperty - reductionProperty;
+    const arrearsDeposit = receivableDeposit - receivedDeposit - reductionDeposit;
+    const totalArrears = arrearsRent + arrearsProperty + arrearsDeposit;
 
     setStats({
       totalCount,
       leasedCount,
       vacantCount,
       decorationCount,
-      totalReceivable,
-      totalReceived,
-      arrearsAmount
+      receivable: {
+        rent: receivableRent,
+        property: receivableProperty,
+        deposit: receivableDeposit,
+        total: totalReceivable
+      },
+      received: {
+        rent: receivedRent,
+        property: receivedProperty,
+        deposit: receivedDeposit,
+        total: totalReceived
+      },
+      reduction: {
+        rent: reductionRent,
+        property: reductionProperty,
+        deposit: reductionDeposit,
+        total: totalReduction
+      },
+      arrears: {
+        rent: arrearsRent,
+        property: arrearsProperty,
+        deposit: arrearsDeposit,
+        total: totalArrears
+      }
     });
   };
 
@@ -100,6 +147,56 @@ const RetailShopPage: React.FC = () => {
     }
   };
 
+  // Handle Asset Edit Submit
+  const handleAssetEditSubmit = async (values: any) => {
+    try {
+      if (currentAsset) {
+        updateAsset(currentAsset.id, values);
+        message.success('资产信息更新成功');
+        setAssetEditModalVisible(false);
+        setCurrentAsset(null);
+        actionRef.current?.reload();
+      }
+      return true;
+    } catch (error) {
+      message.error('操作失败');
+      return false;
+    }
+  };
+
+  // Handle Fee Edit Submit
+  const handleFeeEditSubmit = async (values: any) => {
+    try {
+      if (currentAsset) {
+        updateAsset(currentAsset.id, values);
+        message.success('收费信息更新成功');
+        setFeeEditModalVisible(false);
+        setCurrentAsset(null);
+        actionRef.current?.reload();
+      }
+      return true;
+    } catch (error) {
+      message.error('操作失败');
+      return false;
+    }
+  };
+
+  // Handle Terminate Lease
+  const handleTerminateLease = async (assetId: string) => {
+    try {
+      updateAsset(assetId, {
+        status: AssetStatus.VACANT,
+        tenantName: undefined,
+        leaseStartDate: undefined,
+        leaseEndDate: undefined,
+      });
+      message.success('退租成功');
+      actionRef.current?.reload();
+    } catch (error) {
+      message.error('退租失败');
+    }
+  };
+
   // Define table columns
   const columns: ProColumns<Asset>[] = [
     {
@@ -109,19 +206,6 @@ const RetailShopPage: React.FC = () => {
       width: 48,
       fixed: 'left',
       hideInSearch: true
-    },
-    {
-      title: '区域',
-      dataIndex: 'zone',
-      valueType: 'select',
-      valueEnum: {
-        'A': { text: 'A区' },
-        'B': { text: 'B区' },
-        'C': { text: 'C区' },
-        'D': { text: 'D区' },
-      },
-      filters: true,
-      width: 100
     },
     {
       title: '地址/门牌',
@@ -136,27 +220,6 @@ const RetailShopPage: React.FC = () => {
       width: 80,
       render: (_, record) => `${record.floorLevel}楼`,
       sorter: (a, b) => a.floorLevel - b.floorLevel
-    },
-    {
-      title: '面积',
-      dataIndex: 'area',
-      valueType: 'digit',
-      width: 100,
-      hideInSearch: true,
-      render: (_, record) => `${record.area.toLocaleString()} ㎡`,
-      sorter: (a, b) => a.area - b.area
-    },
-    {
-      title: '月租金',
-      key: 'monthlyRent',
-      width: 120,
-      valueType: 'money',
-      hideInSearch: true,
-      render: (_, record) => {
-        // Estimate monthly rent for display if not available
-        const estimatedRent = record.receivableRent ? record.receivableRent / 12 : record.area * 30; 
-        return `¥${estimatedRent.toFixed(2)}`;
-      }
     },
     {
       title: '本年应收',
@@ -241,7 +304,7 @@ const RetailShopPage: React.FC = () => {
     {
       title: '操作',
       valueType: 'option',
-      width: 150,
+      width: 200,
       fixed: 'right',
       hideInSearch: true,
       render: (_, record) => [
@@ -250,13 +313,27 @@ const RetailShopPage: React.FC = () => {
           setDetailModalVisible(true);
         }}>详情</a>,
         <a
-          key="edit"
+          key="asset-edit"
           onClick={() => {
-            setCurrentAsset(record);
-            setEditModalVisible(true);
+            const assetData = { ...record };
+            if (record.leaseStartDate && record.leaseEndDate) {
+              // @ts-ignore
+              assetData.leaseRange = [record.leaseStartDate, record.leaseEndDate];
+            }
+            setCurrentAsset(assetData);
+            setAssetEditModalVisible(true);
           }}
         >
-          编辑
+          资产编辑
+        </a>,
+        <a
+          key="fee-edit"
+          onClick={() => {
+            setCurrentAsset(record);
+            setFeeEditModalVisible(true);
+          }}
+        >
+          收费编辑
         </a>,
         <a
           key="delete"
@@ -322,11 +399,6 @@ const RetailShopPage: React.FC = () => {
         request={async (params, sort, filter) => {
           let filteredData = [...retailAssets];
 
-          // Filter by zone
-          if (params.zone) {
-            filteredData = filteredData.filter(item => item.zone === params.zone);
-          }
-
           // Filter by status
           if (params.status) {
             filteredData = filteredData.filter(item => item.status === params.status);
@@ -387,14 +459,30 @@ const RetailShopPage: React.FC = () => {
         scroll={{ x: 1300 }}
       />
 
-      {/* Create/Edit Modal */}
+      {/* Asset Edit Modal */}
+      <AssetEditModal
+        visible={assetEditModalVisible}
+        onOpenChange={setAssetEditModalVisible}
+        onFinish={handleAssetEditSubmit}
+        asset={currentAsset}
+        onTerminate={handleTerminateLease}
+      />
+
+      {/* Fee Edit Modal */}
+      <FeeEditModal
+        visible={feeEditModalVisible}
+        onOpenChange={setFeeEditModalVisible}
+        onFinish={handleFeeEditSubmit}
+        asset={currentAsset}
+      />
+
+      {/* Create Modal */}
       <ModalForm
-        title={currentAsset ? '编辑门市' : '新建门市'}
+        title="新建门市"
         open={editModalVisible}
         onOpenChange={setEditModalVisible}
         onFinish={handleSubmit}
-        initialValues={currentAsset || {
-          zone: Zone.ZONE_A,
+        initialValues={{
           floorLevel: 1,
           status: AssetStatus.VACANT
         }}
@@ -403,18 +491,6 @@ const RetailShopPage: React.FC = () => {
           destroyOnClose: true
         }}
       >
-        <ProFormSelect
-          name="zone"
-          label="区域"
-          rules={[{ required: true, message: '请选择区域' }]}
-          options={[
-            { label: Zone.ZONE_A, value: Zone.ZONE_A },
-            { label: Zone.ZONE_B, value: Zone.ZONE_B },
-            { label: Zone.ZONE_C, value: Zone.ZONE_C },
-            { label: Zone.ZONE_D, value: Zone.ZONE_D }
-          ]}
-        />
-        
         <ProFormText
           name="addressCode"
           label="门市编码"
@@ -438,17 +514,6 @@ const RetailShopPage: React.FC = () => {
           min={1}
           fieldProps={{ precision: 2 }}
           rules={[{ required: true, message: '请输入面积' }]}
-        />
-        
-        <ProFormSelect
-          name="status"
-          label="状态"
-          rules={[{ required: true, message: '请选择状态' }]}
-          options={[
-            { label: statusLabelMap[AssetStatus.VACANT], value: AssetStatus.VACANT },
-            { label: statusLabelMap[AssetStatus.LEASED], value: AssetStatus.LEASED },
-            { label: statusLabelMap[AssetStatus.DECORATION], value: AssetStatus.DECORATION }
-          ]}
         />
       </ModalForm>
 

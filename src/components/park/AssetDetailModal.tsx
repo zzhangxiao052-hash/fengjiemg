@@ -1,5 +1,6 @@
-import React from 'react';
-import { Modal, Descriptions, Tag, Divider, Empty } from 'antd';
+import React, { useState } from 'react';
+import { Modal, Descriptions, Tag, Divider, Empty, List, Button, Space, message } from 'antd';
+import { FileTextOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
 import { Asset, AssetStatus, AssetType } from '../../types/asset';
 
 interface AssetDetailModalProps {
@@ -64,7 +65,38 @@ const MOCK_ENTERPRISES = [
   }
 ];
 
+// Mock attachments data
+const MOCK_ATTACHMENTS = [
+  {
+    id: '1',
+    name: '租赁合同.pdf',
+    type: 'contract',
+    size: '2.5 MB',
+    uploadDate: '2024-01-15',
+    url: '/mock/租赁合同.pdf'
+  },
+  {
+    id: '2',
+    name: '补充协议.pdf',
+    type: 'agreement',
+    size: '1.2 MB',
+    uploadDate: '2024-02-20',
+    url: '/mock/补充协议.pdf'
+  },
+  {
+    id: '3',
+    name: '物业交接单.pdf',
+    type: 'handover',
+    size: '800 KB',
+    uploadDate: '2024-01-16',
+    url: '/mock/物业交接单.pdf'
+  }
+];
+
 export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ visible, onClose, asset }) => {
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewFile, setPreviewFile] = useState<any>(null);
+
   if (!asset) return null;
 
   // Find tenant info if available
@@ -72,6 +104,25 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ visible, onC
 
   const isDorm = asset.type === AssetType.DORM;
   const isLeased = asset.status === AssetStatus.LEASED;
+
+  // Get attachments for this asset (mock data for now)
+  const attachments = isLeased ? MOCK_ATTACHMENTS : [];
+
+  // Handle file preview
+  const handlePreview = (file: any) => {
+    setPreviewFile(file);
+    setPreviewVisible(true);
+  };
+
+  // Handle file download
+  const handleDownload = (file: any) => {
+    message.success(`正在下载 ${file.name}`);
+    // In real implementation, trigger file download
+    // const link = document.createElement('a');
+    // link.href = file.url;
+    // link.download = file.name;
+    // link.click();
+  };
 
   return (
     <Modal
@@ -119,28 +170,118 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ visible, onC
         )}
       </Descriptions>
 
-      {!isDorm && isLeased && (
+      {/* 附件区域 */}
+      {isLeased && (
         <>
           <Divider />
-          <div style={{ marginBottom: 16, fontWeight: 'bold', fontSize: 16 }}>企业/商户详细信息</div>
-          {tenantInfo ? (
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="企业名称">{tenantInfo.enterpriseName}</Descriptions.Item>
-              <Descriptions.Item label="统一社会信用代码">{tenantInfo.socialCreditCode}</Descriptions.Item>
-              <Descriptions.Item label="所属行业">{tenantInfo.industry}</Descriptions.Item>
-              <Descriptions.Item label="企业规模">{tenantInfo.enterpriseScale}</Descriptions.Item>
-              <Descriptions.Item label="注册资金">{tenantInfo.registeredCapital}</Descriptions.Item>
-              <Descriptions.Item label="联系人">{tenantInfo.contactPersonName}</Descriptions.Item>
-              <Descriptions.Item label="联系电话">{tenantInfo.contactPersonPhone}</Descriptions.Item>
-              <Descriptions.Item label="联系邮箱">{tenantInfo.contactPersonEmail}</Descriptions.Item>
-              <Descriptions.Item label="企业地址" span={2}>{tenantInfo.enterpriseAddress}</Descriptions.Item>
-              <Descriptions.Item label="企业简介" span={2}>{tenantInfo.enterpriseSummary}</Descriptions.Item>
-            </Descriptions>
-          ) : (
-            <Empty description="暂无关联的企业详细信息" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          )}
+          <div style={{ marginBottom: '16px' }}>
+            <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: 'bold' }}>附件资料</h3>
+            {attachments.length > 0 ? (
+              <List
+                dataSource={attachments}
+                renderItem={(item) => (
+                  <List.Item
+                    actions={[
+                      <Button
+                        key="preview"
+                        type="link"
+                        icon={<EyeOutlined />}
+                        onClick={() => handlePreview(item)}
+                      >
+                        预览
+                      </Button>,
+                      <Button
+                        key="download"
+                        type="link"
+                        icon={<DownloadOutlined />}
+                        onClick={() => handleDownload(item)}
+                      >
+                        下载
+                      </Button>
+                    ]}
+                  >
+                    <List.Item.Meta
+                      avatar={<FileTextOutlined style={{ fontSize: '24px', color: '#1890ff' }} />}
+                      title={item.name}
+                      description={`大小: ${item.size} | 上传时间: ${item.uploadDate}`}
+                    />
+                  </List.Item>
+                )}
+                bordered
+              />
+            ) : (
+              <Empty description="暂无附件" />
+            )}
+          </div>
         </>
       )}
+
+      {/* 文档预览模态框 */}
+      <Modal
+        title={
+          <Space>
+            <FileTextOutlined />
+            <span>{previewFile?.name || '文档预览'}</span>
+          </Space>
+        }
+        open={previewVisible}
+        onCancel={() => setPreviewVisible(false)}
+        footer={[
+          <Button 
+            key="download" 
+            type="primary"
+            icon={<DownloadOutlined />} 
+            onClick={() => handleDownload(previewFile)}
+          >
+            下载
+          </Button>,
+          <Button key="close" onClick={() => setPreviewVisible(false)}>
+            关闭
+          </Button>
+        ]}
+        width={1000}
+        style={{ top: 20 }}
+        destroyOnClose
+      >
+        <div style={{ 
+          height: '70vh', 
+          border: '1px solid #d9d9d9', 
+          borderRadius: '4px', 
+          overflow: 'hidden',
+          backgroundColor: '#f5f5f5',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          {previewFile ? (
+            previewFile.name.endsWith('.pdf') ? (
+              // PDF 预览
+              <iframe
+                src={`${previewFile.url}#toolbar=1&navpanes=0&scrollbar=1`}
+                style={{ width: '100%', height: '100%', border: 'none', backgroundColor: 'white' }}
+                title={previewFile.name}
+              />
+            ) : (
+              // 其他文件类型
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <FileTextOutlined style={{ fontSize: '64px', color: '#1890ff', marginBottom: '20px' }} />
+                <div style={{ fontSize: '16px', marginBottom: '10px' }}>{previewFile.name}</div>
+                <div style={{ color: '#999' }}>该文件类型暂不支持在线预览，请下载后查看</div>
+                <Button 
+                  type="primary" 
+                  icon={<DownloadOutlined />} 
+                  onClick={() => handleDownload(previewFile)}
+                  style={{ marginTop: '20px' }}
+                >
+                  立即下载
+                </Button>
+              </div>
+            )
+          ) : (
+            <Empty description="无法预览" />
+          )}
+        </div>
+      </Modal>
     </Modal>
   );
 };

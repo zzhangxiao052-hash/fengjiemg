@@ -53,12 +53,38 @@ export interface Asset {
   leaseStartDate?: string;  // YYYY-MM-DD
   leaseEndDate?: string;    // YYYY-MM-DD
   
-  // Financial Fields
-  receivableRent?: number;  // 本年应收租金
-  receivedRent?: number;    // 本年实收租金
+  // Financial Fields - Rent
+  receivableRent?: number;      // 本年应收租金
+  receivedRent?: number;        // 本年实收租金
+  policyReductionRent?: number; // 政策减免租金 (原 policyReductionAmount)
+
+  // Financial Fields - Property Management Fee
+  receivableProperty?: number;      // 本年应收物管费
+  receivedProperty?: number;        // 本年实收物管费
+  policyReductionProperty?: number; // 政策减免物管费
+
+  // Financial Fields - Deposit
+  receivableDeposit?: number;      // 本年应收保证金
+  receivedDeposit?: number;        // 本年实收保证金
+  policyReductionDeposit?: number; // 政策减免保证金
+
   arrearsStatus?: boolean;  // 是否欠费
+  attachments?: AssetAttachment[];  // 附件列表
   createdAt: Date;
   updatedAt: Date;
+}
+
+/**
+ * Asset attachment interface
+ */
+export interface AssetAttachment {
+  id: string;
+  name: string;
+  type: 'contract' | 'agreement' | 'handover' | 'other';  // 合同、协议、交接单、其他
+  size: string;        // e.g., "2.5 MB"
+  uploadDate: string;  // YYYY-MM-DD
+  url: string;         // File URL or path
+  uploader?: string;   // 上传人
 }
 
 /**
