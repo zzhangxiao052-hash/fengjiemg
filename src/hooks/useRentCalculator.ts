@@ -24,7 +24,11 @@ const getPricingCategory = (asset: Asset): PricingCategory => {
     if (asset.floorLevel === 2) return PricingCategory.FACTORY_2F;
     return PricingCategory.FACTORY_3F;
   }
-  if (asset.type === 'dorm') return PricingCategory.DORM;
+  if (asset.type === 'dorm') {
+    // 判断是廉租房还是后勤服务中心/科研试验基地宿舍
+    if (asset.zone === 'LowRent') return PricingCategory.DORM_LOW_RENT;
+    return PricingCategory.DORM_LOGISTICS;
+  }
   return PricingCategory.RETAIL;
 };
 
@@ -195,16 +199,21 @@ export const useRentCalculator = (params?: CalculationParams): {
     // Calculate totals
     const { totalRent, totalMgmt, grandTotal } = calculateTotals(paymentSchedule);
     
+    // Calculate deposit (one-time, based on base rate and area/units)
+    const totalDeposit = baseRate.baseDepositPrice * asset.area;
+    
     return {
       asset,
       policy,
       baseRentPrice: baseRate.baseRentPrice,
       baseMgmtPrice: baseRate.baseMgmtPrice,
+      baseDepositPrice: baseRate.baseDepositPrice,
       totalMonths,
       billingStartDate,
       paymentSchedule,
       totalRent,
       totalMgmt,
+      totalDeposit,
       grandTotal,
       averageMonthlyPayment: grandTotal / totalMonths
     };

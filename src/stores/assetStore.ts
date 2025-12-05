@@ -31,7 +31,8 @@ const generateMockBaseRates = (): BaseRate[] => {
       categoryLabel: '标准厂房一层',
       unit: '元/㎡/月',
       baseRentPrice: 5.0,
-      baseMgmtPrice: 0.5,
+      baseMgmtPrice: 1.0,
+      baseDepositPrice: 15.0,
       createdAt: new Date(),
       updatedAt: new Date()
     },
@@ -41,37 +42,52 @@ const generateMockBaseRates = (): BaseRate[] => {
       categoryLabel: '标准厂房二层',
       unit: '元/㎡/月',
       baseRentPrice: 4.0,
-      baseMgmtPrice: 0.5,
+      baseMgmtPrice: 1.0,
+      baseDepositPrice: 15.0,
       createdAt: new Date(),
       updatedAt: new Date()
     },
     {
       id: 'rate-3',
       category: PricingCategory.FACTORY_3F,
-      categoryLabel: '标准厂房三层及以上',
+      categoryLabel: '标准厂房三四楼',
       unit: '元/㎡/月',
       baseRentPrice: 3.0,
-      baseMgmtPrice: 0.5,
+      baseMgmtPrice: 1.0,
+      baseDepositPrice: 15.0,
       createdAt: new Date(),
       updatedAt: new Date()
     },
     {
       id: 'rate-4',
-      category: PricingCategory.DORM,
-      categoryLabel: '职工宿舍',
-      unit: '元/间/月',
-      baseRentPrice: 300,
-      baseMgmtPrice: 50,
+      category: PricingCategory.DORM_LOW_RENT,
+      categoryLabel: '廉租房',
+      unit: '元/㎡/月',
+      baseRentPrice: 2.0,
+      baseMgmtPrice: 1.0,
+      baseDepositPrice: 500.0,
       createdAt: new Date(),
       updatedAt: new Date()
     },
     {
       id: 'rate-5',
+      category: PricingCategory.DORM_LOGISTICS,
+      categoryLabel: '后勤服务中心宿舍及科研试验基地宿舍',
+      unit: '元/间/月',
+      baseRentPrice: 200.0,
+      baseMgmtPrice: 100.0,
+      baseDepositPrice: 1000.0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: 'rate-6',
       category: PricingCategory.RETAIL,
       categoryLabel: '配套门市',
       unit: '元/㎡/月',
-      baseRentPrice: 8.0,
-      baseMgmtPrice: 1.0,
+      baseRentPrice: 10.0,
+      baseMgmtPrice: 10.0,
+      baseDepositPrice: 10.0,
       createdAt: new Date(),
       updatedAt: new Date()
     }
@@ -140,6 +156,25 @@ const generateMockPolicies = (): PricingPolicy[] => {
           mgmtDiscount: 0,
           order: 1
         }
+      ],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: 'policy-4',
+      policyName: '门市年度递增策略',
+      targetIndustry: 'Retail',
+      description: '第二年在第一年的租金基础上增加3%，以此递增没有上限',
+      stages: [
+        {
+          id: 'stage-4-1',
+          duration: 12,
+          rentDiscount: 0,  // Standard rate for first year
+          mgmtDiscount: 0,
+          order: 1
+        }
+        // Note: 年度递增需要在计算器中特殊处理
       ],
       isActive: true,
       createdAt: new Date(),

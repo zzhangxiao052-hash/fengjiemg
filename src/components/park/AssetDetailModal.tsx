@@ -156,16 +156,36 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ visible, onC
       <Divider />
 
       <Descriptions title="租赁信息" bordered column={2}>
-        <Descriptions.Item label="租赁状态">
-           {isLeased ? '已出租' : '未出租'}
-        </Descriptions.Item>
-        {isLeased && (
+        {/* For dorm assets, replace the lease status field with enterprise name display */}
+        {isDorm ? (
+          // If it's a dorm, show 所在企业 (使用承租方名称或空字符串)
+          isLeased ? (
+            <>
+              <Descriptions.Item label="所在企业">{asset.tenantName || '—'}</Descriptions.Item>
+              <Descriptions.Item label="承租方">{asset.tenantName}</Descriptions.Item>
+              <Descriptions.Item label="租赁开始日期">{asset.leaseStartDate}</Descriptions.Item>
+              <Descriptions.Item label="租赁结束日期">{asset.leaseEndDate}</Descriptions.Item>
+              <Descriptions.Item label="本年应收">¥{asset.receivableRent?.toLocaleString()}</Descriptions.Item>
+              <Descriptions.Item label="本年实收">¥{asset.receivedRent?.toLocaleString()}</Descriptions.Item>
+            </>
+          ) : (
+            <Descriptions.Item label="所在企业">—</Descriptions.Item>
+          )
+        ) : (
+          // Non-dorm behavior: keep original 租赁状态 field
           <>
-            <Descriptions.Item label="承租方">{asset.tenantName}</Descriptions.Item>
-            <Descriptions.Item label="租赁开始日期">{asset.leaseStartDate}</Descriptions.Item>
-            <Descriptions.Item label="租赁结束日期">{asset.leaseEndDate}</Descriptions.Item>
-            <Descriptions.Item label="本年应收">¥{asset.receivableRent?.toLocaleString()}</Descriptions.Item>
-            <Descriptions.Item label="本年实收">¥{asset.receivedRent?.toLocaleString()}</Descriptions.Item>
+            <Descriptions.Item label="租赁状态">
+              {isLeased ? '已出租' : '未出租'}
+            </Descriptions.Item>
+            {isLeased && (
+              <>
+                <Descriptions.Item label="承租方">{asset.tenantName}</Descriptions.Item>
+                <Descriptions.Item label="租赁开始日期">{asset.leaseStartDate}</Descriptions.Item>
+                <Descriptions.Item label="租赁结束日期">{asset.leaseEndDate}</Descriptions.Item>
+                <Descriptions.Item label="本年应收">¥{asset.receivableRent?.toLocaleString()}</Descriptions.Item>
+                <Descriptions.Item label="本年实收">¥{asset.receivedRent?.toLocaleString()}</Descriptions.Item>
+              </>
+            )}
           </>
         )}
       </Descriptions>

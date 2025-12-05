@@ -31,10 +31,22 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
     );
   }, [assets, assetType]);
 
-  // Get pricing policy options (3 active policies + standard)
+  // Get pricing policy options based on asset type
   const policyOptions = useMemo(() => {
+    // For retail shops, only show the retail increment policy
+    if (assetType === AssetType.RETAIL) {
+      const retailPolicy = pricingPolicies.find(p => p.id === 'policy-4');
+      return retailPolicy ? [{ label: retailPolicy.policyName, value: retailPolicy.id }] : [];
+    }
+    
+    // For dormitory, no policies shown (will be hidden)
+    if (assetType === AssetType.DORM) {
+      return [];
+    }
+    
+    // For factories, show all active policies
     const activePolicies = pricingPolicies
-      .filter(p => p.isActive)
+      .filter(p => p.isActive && p.id !== 'policy-4') // Exclude retail policy
       .map(p => ({
         label: `${p.policyName}`,
         value: p.id,
@@ -44,7 +56,7 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
       { label: '标准计费 (无优惠)', value: 'standard' },
       ...activePolicies
     ];
-  }, [pricingPolicies]);
+  }, [pricingPolicies, assetType]);
 
   // Enhanced onFinish to include calculated rent data
   const handleFinish = async (values: any) => {
@@ -54,7 +66,15 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
       const leaseStartDate = dayjs(values.leaseRange[0]).toDate();
       const leaseEndDate = dayjs(values.leaseRange[1]).toDate();
       const decorationDays = values.decorationDays || 0;
-      const actualPolicyId = values.policyId === 'standard' ? undefined : values.policyId;
+      // policyId may be a string or an array when switched to multi-select.
+      let actualPolicyId: string | undefined = undefined;
+      if (Array.isArray(values.policyId)) {
+        // prefer the first selected policy that is not 'standard'
+        const nonStandard = values.policyId.find((p: string) => p !== 'standard');
+        actualPolicyId = nonStandard || (values.policyId.length > 0 && values.policyId[0] !== 'standard' ? values.policyId[0] : undefined);
+      } else {
+        actualPolicyId = values.policyId === 'standard' ? undefined : values.policyId;
+      }
 
       // Calculate rent
       const calculation = calculate({
@@ -62,7 +82,7 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
         leaseStartDate,
         leaseEndDate,
         decorationDays,
-        policyId: actualPolicyId
+          policyId: actualPolicyId
       });
 
       if (calculation) {
@@ -153,31 +173,34 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
         placeholder="请输入租户名称"
         rules={[{ required: true, message: '请输入租户名称' }]}
       />
-      <ProFormSelect
-        name="industry"
-        label="所属行业"
-        options={[
-          { label: '眼镜产业', value: 'glasses_industry' },
-          { label: '新签企业', value: 'new_enterprise' },
-          { label: '传统制造业', value: 'traditional_mfg' },
-          { label: '配套服务业', value: 'supporting_services' },
-        ]}
-        placeholder="请选择行业"
-        rules={[{ required: true, message: '请选择行业' }]}
-      />
+      {/* 所在企业：宿舍类型改为文本输入（用户自行填写）；其它资产类型仍保留所属行业下拉 */}
+      {assetType === AssetType.DORM ? (
+        <ProFormText
+          name="enterpriseName"
+          label="所在企业"
+          placeholder="请输入所在企业名称"
+          rules={[{ required: true, message: '请输入所在企业名称' }]}
+        />
+      ) : (
+        <ProFormSelect
+          name="industry"
+          label="所属行业"
+          options={[
+            { label: '眼镜产业', value: 'glasses_industry' },
+            { label: '新签企业', value: 'new_enterprise' },
+            { label: '传统制造业', value: 'traditional_mfg' },
+            { label: '配套服务业', value: 'supporting_services' },
+          ]}
+          placeholder="请选择行业"
+          rules={[{ required: true, message: '请选择行业' }]}
+        />
+      )}
 
       <Divider orientation="left">租赁条款</Divider>
       <ProFormDateRangePicker
         name="leaseRange"
         label="起止日期"
         rules={[{ required: true, message: '请选择租赁起止日期' }]}
-      />
-      <ProFormDigit
-        name="decorationDays"
-        label="装修免租期 (天)"
-        min={0}
-        initialValue={0}
-        fieldProps={{ precision: 0 }}
       />
 
       <ProFormUploadDragger
@@ -188,17 +211,50 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
       />
 
       <Divider orientation="left">费用计算</Divider>
-      <ProFormSelect
-        name="policyId"
-        label="收费标准"
-        initialValue="standard"
-        options={policyOptions}
-        rules={[{ required: true, message: '请选择收费标准' }]}
-      />
+      
+      {/* For Retail: Show fixed policy as static text with hidden input */}
+      {assetType === AssetType.RETAIL && (
+        <>
+          <Form.Item label="使用政策">
+            <Text strong style={{ color: '#1890ff' }}>门市年度递增策略</Text>
+            <br />
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              第二年在第一年的租金基础上增加3%，以此递增没有上限
+            </Text>
+          </Form.Item>
+          <ProFormText
+            name="policyId"
+            hidden
+            initialValue="policy-4"
+          />
+        </>
+      )}
+      
+      {/* For Dormitory: Hide policy selection, use standard rate */}
+      {assetType === AssetType.DORM && (
+        <ProFormText
+          name="policyId"
+          hidden
+          initialValue="standard"
+        />
+      )}
+      
+      {/* For Factory: Show full policy dropdown */}
+      {assetType === AssetType.FACTORY && (
+        <ProFormSelect
+          name="policyId"
+          label="收费标准"
+          // Use array initial value for multi-select
+          initialValue={["standard"]}
+          options={policyOptions}
+          rules={[{ required: true, message: '请选择收费标准' }]}
+          fieldProps={{ mode: 'multiple', placeholder: '请选择收费标准（可多选）' }}
+        />
+      )}
 
       {/* Smart Calculation Display with Real-time Calculator */}
-      <ProFormDependency name={['assetId', 'policyId', 'leaseRange', 'decorationDays']}>
-        {({ assetId, policyId, leaseRange, decorationDays }) => {
+      <ProFormDependency name={['assetId', 'policyId', 'leaseRange']}>
+        {({ assetId, policyId, leaseRange }) => {
           const selectedAsset = vacantAssets.find((a) => a.id === assetId);
           
           if (!selectedAsset) {
@@ -220,15 +276,21 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
           // Calculate rent using the hook
           const leaseStartDate = dayjs(leaseRange[0]).toDate();
           const leaseEndDate = dayjs(leaseRange[1]).toDate();
-          const decoration = decorationDays || 0;
-          const actualPolicyId = policyId === 'standard' ? undefined : policyId;
+          // policyId from form may be string or string[] (multi-select). Pick a policy id for calculation.
+          let effectivePolicyId: string | undefined = undefined;
+          if (Array.isArray(policyId)) {
+            const nonStandard = policyId.find((p: string) => p !== 'standard');
+            effectivePolicyId = nonStandard || (policyId.length > 0 && policyId[0] !== 'standard' ? policyId[0] : undefined);
+          } else {
+            effectivePolicyId = policyId === 'standard' ? undefined : policyId;
+          }
 
           const calculation = calculate({
             asset: selectedAsset,
             leaseStartDate,
             leaseEndDate,
-            decorationDays: decoration,
-            policyId: actualPolicyId
+            decorationDays: 0,
+            policyId: effectivePolicyId
           });
 
           if (!calculation) {
@@ -239,8 +301,25 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
             );
           }
 
-          const selectedPolicy = pricingPolicies.find(p => p.id === policyId);
-          const policyName = selectedPolicy ? selectedPolicy.policyName : '标准计费 (无优惠)';
+          // Render selected policy names (support array)
+          let policyName = '标准计费 (无优惠)';
+          if (Array.isArray(policyId)) {
+            const names = policyId.map((id: string) => {
+              if (id === 'standard') return '标准计费 (无优惠)';
+              const p = pricingPolicies.find(pp => pp.id === id);
+              return p ? p.policyName : id;
+            });
+            policyName = names.join(', ');
+          } else {
+            const selectedPolicy = pricingPolicies.find(p => p.id === policyId);
+            policyName = selectedPolicy ? selectedPolicy.policyName : '标准计费 (无优惠)';
+          }
+
+          // Helper function to calculate date from month offset
+          const getDateFromMonthOffset = (baseDate: Date, monthOffset: number): string => {
+            const date = dayjs(baseDate).add(monthOffset - 1, 'month');
+            return date.format('YYYY.MM.DD');
+          };
 
           // Payment schedule table columns
           const scheduleColumns = [
@@ -254,10 +333,13 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
               title: '月份范围',
               dataIndex: 'months',
               key: 'months',
-              render: (_: any, record: any) => 
-                record.monthStart === record.monthEnd 
-                  ? `第${record.monthStart}月` 
-                  : `第${record.monthStart}-${record.monthEnd}月`
+              render: (_: any, record: any) => {
+                const startDate = getDateFromMonthOffset(leaseStartDate, record.monthStart);
+                const endDate = getDateFromMonthOffset(leaseStartDate, record.monthEnd);
+                return record.monthStart === record.monthEnd 
+                  ? startDate
+                  : `${startDate}-${endDate}`;
+              }
             },
             {
               title: '月租金',
@@ -306,13 +388,7 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
                     suffix="月"
                   />
                 </Col>
-                <Col span={6}>
-                  <Statistic 
-                    title="装修免租期" 
-                    value={decoration} 
-                    suffix="天"
-                  />
-                </Col>
+                
                 <Col span={6}>
                   <Statistic 
                     title="总租金" 

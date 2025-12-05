@@ -77,6 +77,13 @@ const BaseRatesTab: React.FC = () => {
       render: (_, record) => `¥${record.baseMgmtPrice.toFixed(2)}`
     },
     {
+      title: '基础保证金 (元)',
+      dataIndex: 'baseDepositPrice',
+      valueType: 'money',
+      width: 150,
+      render: (_, record) => `¥${record.baseDepositPrice.toFixed(2)}`
+    },
+    {
       title: '更新时间',
       dataIndex: 'updatedAt',
       valueType: 'dateTime',
@@ -192,8 +199,9 @@ const BaseRatesTab: React.FC = () => {
           options={[
             { label: '标准厂房一层', value: PricingCategory.FACTORY_1F },
             { label: '标准厂房二层', value: PricingCategory.FACTORY_2F },
-            { label: '标准厂房三层及以上', value: PricingCategory.FACTORY_3F },
-            { label: '职工宿舍', value: PricingCategory.DORM },
+            { label: '标准厂房三四楼', value: PricingCategory.FACTORY_3F },
+            { label: '廉租房', value: PricingCategory.DORM_LOW_RENT },
+            { label: '后勤服务中心宿舍及科研试验基地宿舍', value: PricingCategory.DORM_LOGISTICS },
             { label: '配套门市', value: PricingCategory.RETAIL }
           ]}
         />
@@ -228,6 +236,15 @@ const BaseRatesTab: React.FC = () => {
           fieldProps={{ precision: 2 }}
           rules={[{ required: true, message: '请输入基础物管费' }]}
           extra="每单位的物管费价格"
+        />
+        
+        <ProFormDigit
+          name="baseDepositPrice"
+          label="基础保证金 (元)"
+          min={0}
+          fieldProps={{ precision: 2 }}
+          rules={[{ required: true, message: '请输入基础保证金' }]}
+          extra="每单位的保证金价格（如不继续租赁会退还）"
         />
       </ModalForm>
     </>

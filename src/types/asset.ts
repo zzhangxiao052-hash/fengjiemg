@@ -107,8 +107,9 @@ export interface AssetFilter {
 export enum PricingCategory {
   FACTORY_1F = 'factory_1f',
   FACTORY_2F = 'factory_2f',
-  FACTORY_3F = 'factory_3f',
-  DORM = 'dorm',
+  FACTORY_3F = 'factory_3f_4f',
+  DORM_LOW_RENT = 'dorm_low_rent',
+  DORM_LOGISTICS = 'dorm_logistics_research',
   RETAIL = 'retail'
 }
 
@@ -122,6 +123,7 @@ export interface BaseRate {
   unit: string;               // "sqm/month" or "room/month"
   baseRentPrice: number;      // Base rent per unit (¥)
   baseMgmtPrice: number;      // Base management fee per unit (¥)
+  baseDepositPrice: number;   // Base deposit per unit (¥)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -282,11 +284,13 @@ export interface RentCalculation {
   policy?: PricingPolicy;
   baseRentPrice: number;
   baseMgmtPrice: number;
+  baseDepositPrice: number;
   totalMonths: number;
   billingStartDate: Date;
   paymentSchedule: PaymentScheduleItem[];
   totalRent: number;
   totalMgmt: number;
+  totalDeposit: number;
   grandTotal: number;
   averageMonthlyPayment: number;
 }

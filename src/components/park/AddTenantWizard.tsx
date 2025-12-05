@@ -17,6 +17,7 @@ import {
   CalculatorOutlined,
   CheckCircleOutlined
 } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { useAssetStore } from '../../stores/assetStore';
 import { useRentCalculator, formatCurrency, formatDate, usePricingSummary } from '../../hooks/useRentCalculator';
 import { 
@@ -416,12 +417,24 @@ const AddTenantWizard: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) =>
 const PaymentSchedulePreview: React.FC<{ calculation: RentCalculation }> = ({ calculation }) => {
   const summary = usePricingSummary(calculation);
 
+  // Helper function to calculate date from month offset
+  const getDateFromMonthOffset = (baseDate: Date, monthOffset: number): string => {
+    const date = dayjs(baseDate).add(monthOffset - 1, 'month');
+    return date.format('YYYY.MM.DD');
+  };
+
   const columns = [
     {
       title: '阶段',
       dataIndex: 'stage',
       key: 'stage',
-      render: (_: any, record: any) => `月 ${record.monthStart}-${record.monthEnd}`
+      render: (_: any, record: any) => {
+        const startDate = getDateFromMonthOffset(calculation.billingStartDate, record.monthStart);
+        const endDate = getDateFromMonthOffset(calculation.billingStartDate, record.monthEnd);
+        return record.monthStart === record.monthEnd 
+          ? startDate
+          : `${startDate}-${endDate}`;
+      }
     },
     {
       title: '租金/月',
