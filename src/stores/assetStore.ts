@@ -200,6 +200,27 @@ const generateMockAssets = (): Asset[] => {
         for (let unit = 1; unit <= 2; unit++) {
           const status = statuses[Math.floor(Math.random() * statuses.length)];
           const isLeased = status === AssetStatus.LEASED;
+          
+          // 为部分已租赁资产添加政策数据
+          const policies = isLeased && Math.random() < 0.5 ? [
+            {
+              id: `policy-benefit-${id}-1`,
+              policyName: '眼镜产业专项扶持政策',
+              startDate: '2024-01-01',
+              endDate: '2026-12-31',
+              reductionAmount: 180000,
+              description: '前3年免租金，支持眼镜产业发展'
+            },
+            {
+              id: `policy-benefit-${id}-2`,
+              policyName: '装修期优惠政策',
+              startDate: '2024-01-01',
+              endDate: '2024-03-31',
+              reductionAmount: 30000,
+              description: '前3个月免租金免物管费'
+            }
+          ] : undefined;
+          
           assets.push({
             id: `asset-factory-${id}`,
             type: AssetType.FACTORY,
@@ -212,6 +233,7 @@ const generateMockAssets = (): Asset[] => {
             tenantName: isLeased ? `企业${id}` : undefined,
             leaseStartDate: isLeased ? '2024-01-01' : undefined,
             leaseEndDate: isLeased ? '2025-12-31' : undefined,
+            policies,
             createdAt: new Date(),
             updatedAt: new Date()
           });

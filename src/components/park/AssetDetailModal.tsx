@@ -190,6 +190,49 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ visible, onC
         )}
       </Descriptions>
 
+      {/* 享有政策区域 */}
+      {isLeased && asset.policies && asset.policies.length > 0 && (
+        <>
+          <Divider />
+          <div style={{ marginBottom: '16px' }}>
+            <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: 'bold' }}>享有政策</h3>
+            <List
+              dataSource={asset.policies}
+              renderItem={(policy) => (
+                <List.Item>
+                  <List.Item.Meta
+                    title={
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 'bold', fontSize: '15px' }}>{policy.policyName}</span>
+                        <Tag color="green" style={{ fontSize: '14px' }}>
+                          减免 ¥{policy.reductionAmount.toLocaleString()}
+                        </Tag>
+                      </div>
+                    }
+                    description={
+                      <div>
+                        <div style={{ marginBottom: '4px' }}>
+                          <span style={{ color: '#666' }}>政策期限：</span>
+                          <span style={{ color: '#1890ff' }}>
+                            {policy.startDate} 至 {policy.endDate}
+                          </span>
+                        </div>
+                        {policy.description && (
+                          <div style={{ color: '#999', marginTop: '4px' }}>
+                            {policy.description}
+                          </div>
+                        )}
+                      </div>
+                    }
+                  />
+                </List.Item>
+              )}
+              bordered
+            />
+          </div>
+        </>
+      )}
+
       {/* 附件区域 */}
       {isLeased && (
         <>

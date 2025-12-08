@@ -38,6 +38,18 @@ export enum Zone {
 }
 
 /**
+ * Policy benefit interface - 享有政策详情
+ */
+export interface PolicyBenefit {
+  id: string;
+  policyName: string;        // 政策名称
+  startDate: string;         // 政策开始日期 YYYY-MM-DD
+  endDate: string;           // 政策结束日期 YYYY-MM-DD
+  reductionAmount: number;   // 减免金额（元）
+  description?: string;      // 政策描述
+}
+
+/**
  * Core Asset interface
  */
 export interface Asset {
@@ -70,6 +82,7 @@ export interface Asset {
 
   arrearsStatus?: boolean;  // 是否欠费
   attachments?: AssetAttachment[];  // 附件列表
+  policies?: PolicyBenefit[];  // 享有政策列表
   createdAt: Date;
   updatedAt: Date;
 }
