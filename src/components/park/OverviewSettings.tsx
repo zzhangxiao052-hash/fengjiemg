@@ -206,65 +206,86 @@ export default function OverviewSettings() {
       formRef={formRef}
       initialValues={initialValues}
       onFinish={handleFinish}
-      // submitter removed to avoid duplicate top-right fixed button; submission
-      // should be handled by page-level controls when embedded in VisualizationManagement
       layout="horizontal"
+      submitter={{
+        render: (props, dom) => {
+          return (
+            <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 100 }}>
+              <Button type="primary" icon={<SaveOutlined />} onClick={() => props.form?.submit()} size="large">
+                保存全部配置
+              </Button>
+            </div>
+          );
+        },
+      }}
     >
-      <ProCard ghost gutter={[16, 16]} direction="column">
-        
-        {/* --- 1. Center/Top: Map & Core Metrics --- */}
-        <ProCard title="地图与核心指标 (Center/Top)" headerBordered bordered>
-          <ProFormGroup title="顶部核心指标">
-            <ProFormList
-              name="topMetrics"
-              min={3}
-              max={3}
-              copyIconProps={false}
-              deleteIconProps={false}
-              creatorButtonProps={false}
-              itemRender={({ listDom, action }, { index }) => (
-                <ProCard bordered style={{ marginBottom: 8 }} bodyStyle={{ padding: 16 }}>
-                  {listDom}
-                </ProCard>
-              )}
-            >
-              <ProFormGroup>
-                <ProFormText name="name" label="指标名称" width="sm" disabled />
-                <ProFormDigit name="value" label="数值" width="sm" />
-                <ProFormText name="unit" label="单位" width="xs" />
-              </ProFormGroup>
-            </ProFormList>
-          </ProFormGroup>
-
-          <ProCard title="园区卡片信息 (Map Markers)" bordered={false} style={{ marginTop: 16 }}>
-            <EditableProTable<ParkMarker>
-              name="parkMarkers"
-              rowKey="id"
-              columns={parkMarkerColumns}
-              recordCreatorProps={{
-                newRecordType: 'dataSource',
-                record: () => ({ id: Date.now().toString(), name: '新园区', area: '', coreIndustry: '' }),
-              }}
-              editable={{
-                type: 'multiple',
-              }}
-            />
-          </ProCard>
-        </ProCard>
-
-        {/* --- Split Layout: Left & Right --- */}
-        <ProCard ghost gutter={16}>
+      <ProCard ghost gutter={[16, 16]}>
+        {/* --- Left Column --- */}
+        <ProCard colSpan="50%" direction="column" ghost gutter={[0, 16]}>
           
-          {/* --- 2. Left Section: Ecology & Energy --- */}
-          <ProCard colSpan={10} title="左侧屏配置 (生态与能源)" headerBordered bordered direction="column">
+          {/* Module 1: Top Metrics & Ecology */}
+          <ProCard 
+            title="顶部核心指标 & 生态概况 (Top)" 
+            headerBordered 
+            headStyle={{ borderLeft: '4px solid #1890ff' }} 
+            bordered
+          >
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 8, fontWeight: 500 }}>顶部核心指标:</div>
+              <ProFormList
+                name="topMetrics"
+                min={3}
+                max={3}
+                copyIconProps={false}
+                deleteIconProps={false}
+                creatorButtonProps={false}
+                itemRender={({ listDom }, { index }) => (
+                  <ProCard bordered style={{ marginBottom: 8 }} bodyStyle={{ padding: 12 }}>
+                    {listDom}
+                  </ProCard>
+                )}
+              >
+                <ProFormGroup>
+                  <ProFormText name="name" label="指标名称" width="sm" disabled />
+                  <ProFormDigit name="value" label="数值" width="xs" />
+                  <ProFormText name="unit" label="单位" width="xs" />
+                </ProFormGroup>
+              </ProFormList>
+            </div>
+
             <ProFormTextArea
               name="ecologyOverview"
               label="生态工业发展概览"
               placeholder="请输入左上角的文字介绍"
               fieldProps={{ rows: 4 }}
             />
+          </ProCard>
 
-            <ProCard title="园区风光 (视频矩阵)" bordered={false} style={{ marginTop: 16 }}>
+          {/* Module 2: Park Info & Videos */}
+          <ProCard 
+            title="园区信息 & 风光 (Middle)" 
+            headerBordered 
+            headStyle={{ borderLeft: '4px solid #1890ff' }} 
+            bordered
+          >
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ marginBottom: 8, fontWeight: 500 }}>园区卡片信息 (地图):</div>
+              <EditableProTable<ParkMarker>
+                name="parkMarkers"
+                rowKey="id"
+                columns={parkMarkerColumns}
+                recordCreatorProps={{
+                  newRecordType: 'dataSource',
+                  record: () => ({ id: Date.now().toString(), name: '新园区', area: '', coreIndustry: '' }),
+                }}
+                editable={{
+                  type: 'multiple',
+                }}
+              />
+            </div>
+
+            <div>
+              <div style={{ marginBottom: 8, fontWeight: 500 }}>园区风光 (摄像头配置):</div>
               <ProFormList
                 name="videos"
                 label="视频流配置 (Max 4)"
@@ -288,95 +309,117 @@ export default function OverviewSettings() {
                   <ProFormText name="url" label="视频流地址 (RTSP/HLS)" width="md" rules={[{ required: true }]} />
                 </ProFormGroup>
               </ProFormList>
-            </ProCard>
-
-            <ProCard title="用能情况统计 (Bar Chart)" bordered={false} style={{ marginTop: 16 }}>
-              <EditableProTable<EnergyStat>
-                name="energyStats"
-                rowKey="id"
-                columns={energyColumns}
-                recordCreatorProps={{
-                  newRecordType: 'dataSource',
-                  record: () => ({ id: Date.now().toString(), year: '2025', water: 0, electricity: 0, gas: 0 }),
-                }}
-                editable={{
-                  type: 'multiple',
-                }}
-              />
-            </ProCard>
+            </div>
           </ProCard>
 
-          {/* --- 3. Right Section: Industry Data --- */}
-          <ProCard colSpan={14} title="右侧屏配置 (产业数据)" headerBordered bordered>
-            <ProCard
-              tabs={{
-                type: 'card',
+          {/* Module 3: Energy Stats */}
+          <ProCard 
+            title="用能情况统计 (Bottom)" 
+            headerBordered 
+            headStyle={{ borderLeft: '4px solid #1890ff' }} 
+            bordered
+          >
+            <EditableProTable<EnergyStat>
+              name="energyStats"
+              rowKey="id"
+              columns={energyColumns}
+              recordCreatorProps={{
+                newRecordType: 'dataSource',
+                record: () => ({ id: Date.now().toString(), year: '2025', water: 0, electricity: 0, gas: 0 }),
               }}
-            >
-              <ProCard.TabPane key="tab1" tab="产业布局统计">
-                <EditableProTable<IndustryLayoutItem>
-                  name="industryLayout"
+              editable={{
+                type: 'multiple',
+              }}
+            />
+          </ProCard>
+
+        </ProCard>
+
+        {/* --- Right Column --- */}
+        <ProCard colSpan="50%" direction="column" ghost gutter={[0, 16]}>
+          
+          {/* Module 4: Industry Layout */}
+          <ProCard 
+            title="产业布局统计 (Top)" 
+            headerBordered 
+            headStyle={{ borderLeft: '4px solid #52c41a' }} 
+            bordered
+          >
+            <EditableProTable<IndustryLayoutItem>
+              name="industryLayout"
+              rowKey="id"
+              columns={industryLayoutColumns}
+              recordCreatorProps={{
+                newRecordType: 'dataSource',
+                record: () => ({ id: Date.now().toString(), name: '新产业', value: 0 }),
+              }}
+              editable={{
+                type: 'multiple',
+              }}
+            />
+          </ProCard>
+
+          {/* Module 5: Specific Industries */}
+          <ProCard 
+            title="特色产业详情 (Middle)" 
+            headerBordered 
+            headStyle={{ borderLeft: '4px solid #52c41a' }} 
+            bordered
+          >
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ marginBottom: 16, fontWeight: 500, borderBottom: '1px solid #f0f0f0', paddingBottom: 8 }}>眼镜产业情况</div>
+              <ProFormGroup>
+                <ProFormDigit name={['glassesIndustry', 'enterpriseCount']} label="企业数量 (家)" width="xs" />
+                <ProFormDigit name={['glassesIndustry', 'output']} label="总产值 (万元)" width="xs" />
+                <ProFormDigit name={['glassesIndustry', 'patents']} label="专利 (项)" width="xs" />
+                <ProFormDigit name={['glassesIndustry', 'trademarks']} label="注册商标 (个)" width="xs" />
+              </ProFormGroup>
+            </div>
+
+            <div>
+              <div style={{ marginBottom: 16, fontWeight: 500, borderBottom: '1px solid #f0f0f0', paddingBottom: 8 }}>农副产品加工产业情况</div>
+              <ProFormGroup>
+                <ProFormDigit name={['agriIndustry', 'enterpriseCount']} label="企业数量 (家)" width="sm" />
+                <ProFormDigit name={['agriIndustry', 'output']} label="总产值 (万元)" width="sm" />
+              </ProFormGroup>
+              
+              <div style={{ marginTop: 16 }}>
+                <div style={{ marginBottom: 8, fontWeight: 500 }}>企业类型分布:</div>
+                <EditableProTable<EnterpriseTypeDist>
+                  name={['agriIndustry', 'distribution']}
                   rowKey="id"
-                  columns={industryLayoutColumns}
+                  columns={agriDistColumns}
                   recordCreatorProps={{
                     newRecordType: 'dataSource',
-                    record: () => ({ id: Date.now().toString(), name: '新产业', value: 0 }),
+                    record: () => ({ id: Date.now().toString(), type: '新类型', count: 0 }),
                   }}
                   editable={{
                     type: 'multiple',
                   }}
                 />
-              </ProCard.TabPane>
+              </div>
+            </div>
+          </ProCard>
 
-              <ProCard.TabPane key="tab2" tab="特色产业详情">
-                <ProCard title="眼镜产业情况" bordered style={{ marginBottom: 16 }} headerBordered>
-                  <ProFormGroup>
-                    <ProFormDigit name={['glassesIndustry', 'enterpriseCount']} label="企业数量 (家)" width="xs" />
-                    <ProFormDigit name={['glassesIndustry', 'output']} label="总产值 (万元)" width="xs" />
-                    <ProFormDigit name={['glassesIndustry', 'patents']} label="专利 (项)" width="xs" />
-                    <ProFormDigit name={['glassesIndustry', 'trademarks']} label="注册商标 (个)" width="xs" />
-                  </ProFormGroup>
-                </ProCard>
-
-                <ProCard title="农副产品加工产业情况" bordered headerBordered>
-                  <ProFormGroup>
-                    <ProFormDigit name={['agriIndustry', 'enterpriseCount']} label="企业数量 (家)" width="sm" />
-                    <ProFormDigit name={['agriIndustry', 'output']} label="总产值 (万元)" width="sm" />
-                  </ProFormGroup>
-                  
-                  <div style={{ marginTop: 16 }}>
-                    <div style={{ marginBottom: 8, fontWeight: 500 }}>企业类型分布:</div>
-                    <EditableProTable<EnterpriseTypeDist>
-                      name={['agriIndustry', 'distribution']}
-                      rowKey="id"
-                      columns={agriDistColumns}
-                      recordCreatorProps={{
-                        newRecordType: 'dataSource',
-                        record: () => ({ id: Date.now().toString(), type: '新类型', count: 0 }),
-                      }}
-                      editable={{
-                        type: 'multiple',
-                      }}
-                    />
-                  </div>
-                </ProCard>
-              </ProCard.TabPane>
-
-              <ProCard.TabPane key="tab3" tab="产品产量统计">
-                <EditableProTable<ProductOutputItem>
-                  name="productOutput"
-                  rowKey="id"
-                  columns={productOutputColumns}
-                  recordCreatorProps={{
-                    newRecordType: 'dataSource',
-                    record: () => ({ id: Date.now().toString(), name: '新产品', output: 0 }),
-                  }}
-                  editable={{
-                    type: 'multiple',
-                  }}
-                />
-              </ProCard.TabPane>
-            </ProCard>
+          {/* Module 6: Product Output */}
+          <ProCard 
+            title="产品产量统计 (Bottom)" 
+            headerBordered 
+            headStyle={{ borderLeft: '4px solid #52c41a' }} 
+            bordered
+          >
+            <EditableProTable<ProductOutputItem>
+              name="productOutput"
+              rowKey="id"
+              columns={productOutputColumns}
+              recordCreatorProps={{
+                newRecordType: 'dataSource',
+                record: () => ({ id: Date.now().toString(), name: '新产品', output: 0 }),
+              }}
+              editable={{
+                type: 'multiple',
+              }}
+            />
           </ProCard>
 
         </ProCard>
