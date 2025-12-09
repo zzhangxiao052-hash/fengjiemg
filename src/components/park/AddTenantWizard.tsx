@@ -115,8 +115,10 @@ const AddTenantWizard: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) =>
         policyId: formData.policyId,
         baseRentPrice: calculation.baseRentPrice,
         baseMgmtPrice: calculation.baseMgmtPrice,
+        baseDepositPrice: calculation.baseDepositPrice,
         totalRent: calculation.totalRent,
         totalMgmt: calculation.totalMgmt,
+        totalDeposit: calculation.totalDeposit,
         grandTotal: calculation.grandTotal,
         paymentSchedule: calculation.paymentSchedule,
         status: LeaseStatus.ACTIVE,
@@ -476,10 +478,12 @@ const PaymentSchedulePreview: React.FC<{ calculation: RentCalculation }> = ({ ca
       <Descriptions column={2} size="small" style={{ marginBottom: 16 }}>
         <Descriptions.Item label="基础租金">{formatCurrency(calculation.baseRentPrice)}/㎡/月</Descriptions.Item>
         <Descriptions.Item label="基础管理费">{formatCurrency(calculation.baseMgmtPrice)}/㎡/月</Descriptions.Item>
+        <Descriptions.Item label="基础保证金">{formatCurrency(calculation.baseDepositPrice)}/㎡</Descriptions.Item>
         <Descriptions.Item label="资产面积">{calculation.asset.area}㎡</Descriptions.Item>
         <Descriptions.Item label="计费月数">{calculation.totalMonths}个月</Descriptions.Item>
         <Descriptions.Item label="计费开始">{formatDate(calculation.billingStartDate)}</Descriptions.Item>
         <Descriptions.Item label="月均支付">{formatCurrency(calculation.averageMonthlyPayment)}</Descriptions.Item>
+        <Descriptions.Item label="保证金总额">{formatCurrency(calculation.totalDeposit)} (一次性)</Descriptions.Item>
       </Descriptions>
 
       <Divider />
@@ -506,6 +510,28 @@ const PaymentSchedulePreview: React.FC<{ calculation: RentCalculation }> = ({ ca
                 </strong>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={4}>总计</Table.Summary.Cell>
+            </Table.Summary.Row>
+            <Table.Summary.Row style={{ backgroundColor: '#e6f7ff' }}>
+              <Table.Summary.Cell index={0} colSpan={3}>
+                <strong>保证金 (一次性)</strong>
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={3}>
+                <strong style={{ color: '#52c41a', fontSize: '16px' }}>
+                  {formatCurrency(calculation.totalDeposit)}
+                </strong>
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={4}>-</Table.Summary.Cell>
+            </Table.Summary.Row>
+            <Table.Summary.Row style={{ backgroundColor: '#fff7e6' }}>
+              <Table.Summary.Cell index={0} colSpan={3}>
+                <strong>应缴总金额 (租金+物管+保证金)</strong>
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={3}>
+                <strong style={{ color: '#fa8c16', fontSize: '18px' }}>
+                  {formatCurrency(calculation.grandTotal + calculation.totalDeposit)}
+                </strong>
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={4}>-</Table.Summary.Cell>
             </Table.Summary.Row>
           </Table.Summary>
         )}

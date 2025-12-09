@@ -91,6 +91,7 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
           ...values,
           receivableRent: calculation.totalRent,
           receivableProperty: calculation.totalMgmt,
+          receivableDeposit: calculation.totalDeposit, // 应收保证金
           // Initialize other financial fields
           receivedRent: 0,
           receivedProperty: 0,
@@ -98,7 +99,11 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
           policyReductionRent: 0,
           policyReductionProperty: 0,
           policyReductionDeposit: 0,
-          receivableDeposit: 0 // Will be filled manually in fee edit
+          // Include all calculation data for reference
+          baseRentPrice: calculation.baseRentPrice,
+          baseMgmtPrice: calculation.baseMgmtPrice,
+          baseDepositPrice: calculation.baseDepositPrice,
+          totalDeposit: calculation.totalDeposit
         };
         
         return await onFinish(enhancedValues);
@@ -374,7 +379,7 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
                 <Space>
                   <Text strong>租金计算明细</Text>
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    (基础单价: ¥{calculation.baseRentPrice.toFixed(2)}/㎡/月 + 物管费: ¥{calculation.baseMgmtPrice.toFixed(2)}/㎡/月)
+                    (租金: ¥{calculation.baseRentPrice.toFixed(2)}/㎡/月 + 物管费: ¥{calculation.baseMgmtPrice.toFixed(2)}/㎡/月 + 保证金: ¥{calculation.baseDepositPrice.toFixed(2)}/㎡)
                   </Text>
                 </Space>
               }
@@ -407,19 +412,37 @@ export const TenantMoveInModal: React.FC<TenantMoveInModalProps> = ({
                     valueStyle={{ color: '#096dd9' }}
                   />
                 </Col>
+                <Col span={6}>
+                  <Statistic 
+                    title="保证金" 
+                    value={calculation.totalDeposit} 
+                    precision={2} 
+                    prefix="¥"
+                    valueStyle={{ color: '#52c41a' }}
+                  />
+                </Col>
               </Row>
 
               <Row gutter={16} style={{ marginBottom: 16 }}>
-                <Col span={12}>
+                <Col span={8}>
                   <Statistic 
-                    title="合同总额" 
+                    title="合同总额 (租金+物管)" 
                     value={calculation.grandTotal} 
                     precision={2} 
                     prefix="¥"
-                    valueStyle={{ color: '#3f8600', fontWeight: 'bold' }}
+                    valueStyle={{ color: '#1890ff', fontWeight: 'bold' }}
                   />
                 </Col>
-                <Col span={12}>
+                <Col span={8}>
+                  <Statistic 
+                    title="应缴总金额 (含保证金)" 
+                    value={calculation.grandTotal + calculation.totalDeposit} 
+                    precision={2} 
+                    prefix="¥"
+                    valueStyle={{ color: '#fa8c16', fontWeight: 'bold', fontSize: '18px' }}
+                  />
+                </Col>
+                <Col span={8}>
                   <Statistic 
                     title="平均月付" 
                     value={calculation.averageMonthlyPayment} 

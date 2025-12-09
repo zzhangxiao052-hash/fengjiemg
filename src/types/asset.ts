@@ -247,11 +247,13 @@ export interface LeaseContract {
   policy?: PricingPolicy;    // Applied pricing policy
   baseRentPrice: number;     // Base rent rate at contract time
   baseMgmtPrice: number;     // Base mgmt rate at contract time
+  baseDepositPrice: number;  // Base deposit rate at contract time
   
   // Calculated totals
   totalRent: number;         // Total rent over lease period
   totalMgmt: number;         // Total mgmt fee over lease period
-  grandTotal: number;        // Total contract value
+  totalDeposit: number;      // Total deposit (one-time payment)
+  grandTotal: number;        // Total contract value (rent + mgmt, excluding deposit)
   
   // Payment schedule
   paymentSchedule: PaymentScheduleItem[];

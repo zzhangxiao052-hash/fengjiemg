@@ -59,34 +59,70 @@ const applyDiscount = (price: number, discountPercent: number): number => {
 
 /**
  * Generate payment schedule based on policy stages
+ * Note: 只有标准厂房(factory)享受政策优惠,门市和宿舍不享受政策优惠
  */
 const generatePaymentSchedule = (
   totalMonths: number,
   baseRentPrice: number,
   baseMgmtPrice: number,
   area: number,
+  assetType: string,
   policy?: PricingPolicy
 ): PaymentScheduleItem[] => {
   const schedule: PaymentScheduleItem[] = [];
   
-  if (!policy || policy.stages.length === 0) {
-    // No policy: standard pricing for all months
-    const rentAmount = baseRentPrice * area;
-    const mgmtAmount = baseMgmtPrice * area;
-    
-    schedule.push({
-      monthStart: 1,
-      monthEnd: totalMonths,
-      rentAmount,
-      mgmtAmount,
-      totalAmount: rentAmount + mgmtAmount,
-      discount: '标准基础费率'
-    });
+  // 门市租金特殊处理:第二年开始租金每年递增3%
+  const isRetail = assetType === 'retail';
+  
+  // 只有标准厂房享受政策优惠,门市和宿舍不享受
+  const shouldApplyPolicy = assetType === 'factory' && policy && policy.stages.length > 0;
+  
+  if (!shouldApplyPolicy) {
+    // No policy or non-factory assets: standard pricing
+    if (isRetail) {
+      // 门市:租金每年递增3%,物管费不变
+      let currentMonth = 1;
+      let yearCount = 0;
+      
+      while (currentMonth <= totalMonths) {
+        yearCount++;
+        const yearEndMonth = Math.min(currentMonth + 11, totalMonths); // 12个月一年
+        
+        // 计算当前年度的租金(从第二年开始每年递增3%)
+        const yearRentMultiplier = Math.pow(1.03, yearCount - 1);
+        const rentAmount = baseRentPrice * area * yearRentMultiplier;
+        const mgmtAmount = baseMgmtPrice * area; // 物管费不变
+        
+        schedule.push({
+          monthStart: currentMonth,
+          monthEnd: yearEndMonth,
+          rentAmount,
+          mgmtAmount,
+          totalAmount: rentAmount + mgmtAmount,
+          discount: yearCount === 1 ? '标准基础费率' : `第${yearCount}年 (租金+${((yearRentMultiplier - 1) * 100).toFixed(0)}%)`
+        });
+        
+        currentMonth = yearEndMonth + 1;
+      }
+    } else {
+      // 厂房或宿舍:标准费率,无递增
+      const rentAmount = baseRentPrice * area;
+      const mgmtAmount = baseMgmtPrice * area;
+      
+      schedule.push({
+        monthStart: 1,
+        monthEnd: totalMonths,
+        rentAmount,
+        mgmtAmount,
+        totalAmount: rentAmount + mgmtAmount,
+        discount: '标准基础费率'
+      });
+    }
     
     return schedule;
   }
   
-  // Apply policy stages
+  // Apply policy stages (only for factory)
   const sortedStages = [...policy.stages].sort((a, b) => a.order - b.order);
   let currentMonth = 1;
   
@@ -193,6 +229,7 @@ export const useRentCalculator = (params?: CalculationParams): {
       baseRate.baseRentPrice,
       baseRate.baseMgmtPrice,
       asset.area,
+      asset.type,
       policy
     );
     
